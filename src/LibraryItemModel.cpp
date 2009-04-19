@@ -31,3 +31,59 @@ LibraryItemModel::~LibraryItemModel()
 {
 
 }
+
+QModelIndex LibraryItemModel::index( int row, int column, const QModelIndex& parent )
+{
+
+}
+
+QModelIndex LibraryItemModel::parent( const QModelIndex& child)
+{
+
+}
+
+int         LibraryItemModel::rowCount( const QModelIndex& parent )
+{
+
+}
+
+int         LibraryItemModel::columnCount( const QModelIndex& parent )
+{
+
+}
+
+QVariant    LibraryItemModel::data( const QModelIndex& index, int role ) const
+{
+
+}
+
+Qt::ItemFlags   LibraryItemModel::flags( const QModelIndex& index ) const
+{
+
+}
+
+QVariant        LibraryItemModel::headerData( int section, Qt::Orientation orientation, int role ) const
+{
+
+}
+
+bool            LibraryItemModel::insertRows(int row, int count, const QModelIndex &parent )
+{
+
+}
+
+bool            LibraryItemModel::removeRows(int row, int count, const QModelIndex& parent )
+{
+
+}
+
+bool            LibraryItemModel::insertColumns(int column, int count, const QModelIndex &parent )
+{
+
+}
+
+bool            LibraryItemModel::removeColumns(int column, int count, const QModelIndex& parent )
+{
+
+}
+

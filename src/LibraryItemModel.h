@@ -24,6 +24,9 @@
 #define LIBRARYITEMMODEL_H
 
 #include <QAbstractItemModel>
+#include <QModelIndex>
+#include <QVariant>
+#include <QAbstractTableModel>
 
 class LibraryItemModel : public QAbstractItemModel
 {
@@ -31,6 +34,18 @@ class LibraryItemModel : public QAbstractItemModel
     public:
         LibraryItemModel();
         virtual ~LibraryItemModel();
+
+        QModelIndex     index( int row, int column, const QModelIndex& parent = QModelIndex() );
+        QModelIndex     parent( const QModelIndex& child);
+        int             rowCount( const QModelIndex& parent = QModelIndex() );
+        int             columnCount( const QModelIndex& parent = QModelIndex() );
+        QVariant        data( const QModelIndex& index, int role = Qt::DisplayRole ) const;
+        Qt::ItemFlags   flags( const QModelIndex& index ) const;
+        QVariant        headerData( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
+        bool            insertRows(int row, int count, const QModelIndex &parent = QModelIndex() );
+        bool            removeRows(int row, int count, const QModelIndex& parent = QModelIndex() );
+        bool            insertColumns(int column, int count, const QModelIndex &parent = QModelIndex() );
+        bool            removeColumns(int column, int count, const QModelIndex& parent = QModelIndex() );
 };
 
 #endif /* !LIBRARYITEMMODEL_H */
