@@ -34,7 +34,9 @@ SOURCES += src/main.cpp \
     src/LibVLCpp/VLCMediaList.cpp \
     src/Library.cpp \
     src/gui/GraphicsMovieItem.cpp \
-    src/gui/AbstractGraphicsMediaItem.cpp
+    src/gui/AbstractGraphicsMediaItem.cpp \
+    src/LibraryItemModel.cpp
+
 HEADERS += src/gui/MainWindow.h \
     src/gui/DockWidgetManager.h \
     src/gui/LibraryWidget.h \
@@ -61,7 +63,8 @@ HEADERS += src/gui/MainWindow.h \
     src/Singleton.hpp \
     src/Library.h \
     src/gui/AbstractGraphicsMediaItem.h \
-    src/gui/GraphicsMovieItem.h
+    src/gui/GraphicsMovieItem.h \
+    src/LibraryItemModel.h
 FORMS += src/gui/ui/MainWindow.ui \
     src/gui/ui/PreviewWidget.ui \
     src/gui/ui/Preferences.ui \
@@ -69,7 +72,7 @@ FORMS += src/gui/ui/MainWindow.ui \
     src/gui/ui/LibraryWidget.ui \
     src/gui/ui/About.ui \
     src/gui/ui/Transcode.ui
-FORMS += 
+FORMS +=
 TRANSLATIONS = ts/vlmc_es.ts \
     ts/vlmc_fr.ts \
     ts/vlmc_sv.ts
