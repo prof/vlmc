@@ -51,6 +51,8 @@
 #include "AudioProjectPreferences.h"
 #include "VideoProjectPreferences.h"
 #include "VLMCPreferences.h"
+#include "EffectBoxView.h"
+#include "EffectBoxScene.h"
 
 MainWindow::MainWindow( QWidget *parent ) :
     QMainWindow( parent ), m_renderer( NULL )
@@ -281,6 +283,7 @@ void MainWindow::initializeDockWidgets( void )
                                   QDockWidget::AllDockWidgetFeatures,
                                   Qt::LeftDockWidgetArea );
     setupLibrary();
+    setupEffectBox();
     m_metaDataManager = MetaDataManager::getInstance();
 }
 
@@ -420,4 +423,18 @@ void MainWindow::on_actionBypass_effects_engine_toggled(bool toggled)
 void MainWindow::on_actionProject_Preferences_triggered()
 {
   m_projectPreferences->show();
+}
+
+void MainWindow::setupEffectBox()
+{
+    EffectBoxView* effectBoxView = EffectBoxView::getInstance();
+    DockWidgetManager::instance()->addDockedWidget( effectBoxView,
+                                  tr( "Effect Box" ),
+                                  Qt::AllDockWidgetAreas,
+                                  QDockWidget::AllDockWidgetFeatures,
+                                  Qt::BottomDockWidgetArea );
+    EffectBoxScene* effectBoxScene = new EffectBoxScene( this );
+    effectBoxScene->addEffect( "test" );
+    //effectBoxScene->addText("Bla Bla Bla");
+    effectBoxView->setScene( effectBoxScene );
 }

@@ -32,8 +32,7 @@ SOURCES += src/main.cpp \
     src/GUI/ListViewMediaItem.cpp \
     src/GUI/MediaListWidget.cpp \
     src/Media/Clip.cpp \
-    src/GUI/About.cpp \
-#    src/GUI/Transcode.cpp \
+    src/GUI/About.cpp \ # src/GUI/Transcode.cpp \
     src/GUI/Slider.cpp \
     src/Metadata/MetaDataWorker.cpp \
     src/Library/Library.cpp \
@@ -69,7 +68,10 @@ SOURCES += src/main.cpp \
     src/EffectsEngine/GenericEffect.cpp \
     src/EffectsEngine/GreenFilterEffect.cpp \
     src/EffectsEngine/MixerEffect.cpp \
-    src/Configuration/SettingsManager.cpp
+    src/Configuration/SettingsManager.cpp \
+    src/GUI/EffectBox/EffectBoxView.cpp \
+    src/GUI/EffectBox/EffectBoxScene.cpp \
+    src/GUI/EffectBox/EffectBoxContainer.cpp
 HEADERS += src/GUI/MainWindow.h \
     src/GUI/DockWidgetManager.h \
     src/GUI/LibraryWidget.h \
@@ -87,8 +89,7 @@ HEADERS += src/GUI/MainWindow.h \
     src/GUI/ListViewMediaItem.h \
     src/Media/Clip.h \
     src/GUI/MediaListWidget.h \
-    src/GUI/About.h \
-#    src/GUI/Transcode.h \
+    src/GUI/About.h \ # src/GUI/Transcode.h \
     src/GUI/Slider.h \
     src/Metadata/MetaDataWorker.h \
     src/Tools/Singleton.hpp \
@@ -133,14 +134,16 @@ HEADERS += src/GUI/MainWindow.h \
     src/EffectsEngine/GenericEffect.h \
     src/EffectsEngine/GreenFilterEffect.h \
     src/EffectsEngine/MixerEffect.h \
-    src/Configuration/SettingsManager.h
+    src/Configuration/SettingsManager.h \
+    src/GUI/EffectBox/EffectBoxView.h \
+    src/GUI/EffectBox/EffectBoxScene.h \
+    src/GUI/EffectBox/EffectBoxContainer.h
 FORMS += src/GUI/ui/MainWindow.ui \
     src/GUI/ui/PreviewWidget.ui \
     src/GUI/ui/LanguagePreferences.ui \
     src/GUI/ui/Timeline.ui \
     src/GUI/ui/LibraryWidget.ui \
-    src/GUI/ui/About.ui \
-#    src/GUI/ui/Transcode.ui \
+    src/GUI/ui/About.ui \ # src/GUI/ui/Transcode.ui \
     src/GUI/ui/FileBrowser.ui \
     src/GUI/ui/WorkflowFileRendererDialog.ui \
     src/GUI/ui/ClipProperty.ui \
@@ -154,6 +157,7 @@ TRANSLATIONS = ts/vlmc_es.ts \
 RESOURCES += ressources.qrc
 INCLUDEPATH += src/LibVLCpp \
     src/GUI \
+    src/GUI/EffectBox \
     src/Tools \
     src/Renderer \
     src/Metadata \
