@@ -23,12 +23,91 @@
 #include "EffectBoxScene.h"
 #include "EffectBoxContainer.h"
 
-EffectBoxScene::EffectBoxScene( QWidget* parent )
+#include <QPointF>
+#include <QDebug>
+
+EffectBoxScene::EffectBoxScene( QWidget* parent ) : m_currentLine( NULL ), m_box( NULL )
 {
 
 }
 
 void    EffectBoxScene::addEffect( QString title )
 {
-    this->addItem( new EffectBoxContainer( title, 4, 2 ) );
+    EffectBoxContainer* container = new EffectBoxContainer( title, 4, 2 );
+    addItem( container );
+    container = new EffectBoxContainer( "Poulpe", 6, 8 );
+    addItem( container );
+}
+
+void    EffectBoxScene::mousePressEvent( QGraphicsSceneMouseEvent* event )
+{
+    EffectBoxContainer* box = NULL;
+    QGraphicsItem* item = itemAt( event->scenePos() );
+    if ( !item )
+        goto NoEffectBoxContainer;
+    box = qgraphicsitem_cast<EffectBoxContainer*>( item );
+    if ( !box )
+        goto NoEffectBoxContainer;
+    qDebug() << event->pos() << event->scenePos();
+    m_box = box;
+    m_currentInSlot = box->isOnInSlot( box->mapFromScene( event->scenePos() ) );
+    m_currentOutSlot = box->isOnOutSlot( box->mapFromScene( event->scenePos() ) );
+    if ( m_currentInSlot.isNull() && m_currentOutSlot.isNull() )
+        goto NoEffectBoxContainer;
+    return;
+    NoEffectBoxContainer:
+    QGraphicsScene::mousePressEvent(event);
+    return;
+}
+
+void    EffectBoxScene::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
+{
+    QPointF origin;
+    qDebug() << "test";
+    if ( m_currentInSlot.isNull() && m_currentOutSlot.isNull() )
+        goto NoEffect;
+    origin = m_currentInSlot.isNull() ? m_currentOutSlot : m_currentInSlot;
+    if ( !m_currentLine )
+    {
+        m_currentLine = new QGraphicsLineItem();
+        addItem( m_currentLine );
+    }
+    m_currentLine->setLine( origin.x(), origin.y(), event->scenePos().x(), event->scenePos().y() );
+    NoEffect:
+    QGraphicsScene::mouseMoveEvent( event );
+    return;
+}
+
+void    EffectBoxScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* event )
+{
+    EffectBoxContainer* box = NULL;
+    QGraphicsItem* item = itemAt( event->scenePos() );
+    if ( !item )
+        goto NoEffectBoxContainer;
+    box = qgraphicsitem_cast<EffectBoxContainer*>( item );
+    if ( !box )
+        goto NoEffectBoxContainer;
+    if ( box == m_box )
+    {
+        m_box = NULL;
+        goto NoEffectBoxContainer;
+    }
+    if ( m_currentInSlot.isNull() )
+        m_currentInSlot = box->isOnInSlot( box->mapFromScene( event->scenePos() ) );
+    if ( m_currentOutSlot.isNull() )
+        m_currentOutSlot = box->isOnOutSlot( box->mapFromScene( event->scenePos() ) );
+    if ( m_currentInSlot.isNull() || m_currentOutSlot.isNull() )
+        goto NoEffectBoxContainer;
+    addItem( m_currentLine );
+    NoEffectBoxContainer:
+    if ( m_currentLine && ( m_currentInSlot.isNull() || m_currentOutSlot.isNull() ) )
+    {
+        removeItem( m_currentLine );
+        delete m_currentLine;
+    }
+    m_currentInSlot = QPointF();
+    m_currentOutSlot = QPointF();
+    m_currentLine = NULL;
+    QGraphicsScene::mouseReleaseEvent( event );
+    return;
 }

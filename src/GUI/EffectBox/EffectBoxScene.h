@@ -24,6 +24,9 @@
 #define EFFECTBOXSCENE_H
 
 #include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
+
+#include "EffectBoxContainer.h"
 
 class EffectBoxScene : public QGraphicsScene
 {
@@ -31,6 +34,14 @@ public:
     EffectBoxScene( QWidget* parent = NULL );
 
     void    addEffect(QString title);
+    void    mousePressEvent( QGraphicsSceneMouseEvent* event );
+    void    mouseReleaseEvent( QGraphicsSceneMouseEvent* event );
+    void    mouseMoveEvent( QGraphicsSceneMouseEvent* event );
+private:
+    QPointF m_currentInSlot;
+    QPointF m_currentOutSlot;
+    QGraphicsLineItem* m_currentLine;
+    EffectBoxContainer* m_box;
 };
 
 #endif // EFFECTBOXSCENE_H

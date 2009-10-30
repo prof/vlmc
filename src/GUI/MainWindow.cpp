@@ -435,6 +435,5 @@ void MainWindow::setupEffectBox()
                                   Qt::BottomDockWidgetArea );
     EffectBoxScene* effectBoxScene = new EffectBoxScene( this );
     effectBoxScene->addEffect( "test" );
-    //effectBoxScene->addText("Bla Bla Bla");
     effectBoxView->setScene( effectBoxScene );
 }

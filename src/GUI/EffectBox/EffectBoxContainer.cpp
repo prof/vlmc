@@ -21,6 +21,8 @@
  *****************************************************************************/
 
 #include "EffectBoxContainer.h"
+#include <QDebug>
+
 
 #define EFFECT_CONTAINER_WIDTH 100
 #define EFFECT_CONTAINER_HEIGHT 100
@@ -38,6 +40,7 @@ EffectBoxContainer::EffectBoxContainer( QString name, int inslots, int outslots,
 
 void    EffectBoxContainer::paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* parent )
 {
+    painter->setRenderHint( QPainter::Antialiasing );
     painter->drawRect( m_margin, m_margin, EFFECT_CONTAINER_HEIGHT - 2 * m_margin, EFFECT_CONTAINER_WIDTH - 2 * m_margin );
     painter->setPen( QPen( Qt::red ) );
     painter->drawText( boundingRect(), Qt::AlignCenter, m_name );
@@ -54,4 +57,28 @@ void    EffectBoxContainer::drawSlots( QPainter* painter, int lineHPos, int slot
 QRectF  EffectBoxContainer::boundingRect() const
 {
     return QRectF(0, 0, EFFECT_CONTAINER_WIDTH + m_margin * 2, EFFECT_CONTAINER_HEIGHT + m_margin * 2 );
+}
+
+QPointF  EffectBoxContainer::isOnInSlot( QPointF pos )
+{
+    for ( int i = 1; i <= m_inslots; ++i )
+    {
+        if ( ( pos.x() >= 0 && pos.x() <= m_margin * 2 ) &&
+             ( pos.y() >= m_margin + i * m_inStep - m_inStep / 2 &&
+               pos.y() <= m_margin + i * m_inStep + m_inStep / 2 ) )
+        return mapToScene( QPointF( m_margin, m_margin + i * m_inStep ) );
+    }
+    return QPointF();
+}
+
+QPointF  EffectBoxContainer::isOnOutSlot( QPointF pos )
+{
+    for ( int i = 1; i <= m_outslots; ++i )
+    {
+        if ( ( pos.x() >= EFFECT_CONTAINER_WIDTH - m_margin * 2 && pos.x() <= EFFECT_CONTAINER_WIDTH ) &&
+             ( pos.y() >= m_margin + i * m_outStep - m_outStep / 2 &&
+               pos.y() <= m_margin + i * m_outStep + m_outStep / 2 ) )
+        return mapToScene( QPointF( EFFECT_CONTAINER_WIDTH - m_margin, m_margin + i * m_outStep ) );
+    }
+    return QPointF();
 }

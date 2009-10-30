@@ -25,5 +25,5 @@
 
 EffectBoxView::EffectBoxView()
 {
-
+    setInteractive( true );
 }

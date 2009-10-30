@@ -29,7 +29,11 @@
 class EffectBoxContainer : public QGraphicsItem
 {
 public:
+    enum { Type = UserType + 1 };
     EffectBoxContainer( QString name, int inslots, int outslots, QWidget* parent = NULL );
+    QPointF  isOnInSlot( QPointF pos );
+    QPointF  isOnOutSlot( QPointF pos );
+    int     type() const { return Type; }
 protected:
     void    paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = NULL );
     QRectF  boundingRect() const;
