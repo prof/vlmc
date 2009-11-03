@@ -26,4 +26,5 @@
 EffectBoxView::EffectBoxView()
 {
     setInteractive( true );
+    setRenderHint( QPainter::Antialiasing );
 }

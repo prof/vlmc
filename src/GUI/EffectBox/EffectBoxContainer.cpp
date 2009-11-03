@@ -38,6 +38,15 @@ EffectBoxContainer::EffectBoxContainer( QString name, int inslots, int outslots,
     m_outslots = outslots;
 }
 
+EffectBoxContainer::~EffectBoxContainer()
+{
+    QGraphicsLineItem* line;
+    foreach( line, m_inSlotLines.values() )
+        delete line;
+    foreach( line, m_outSlotLines.values() )
+        delete line;
+}
+
 void    EffectBoxContainer::paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* parent )
 {
     painter->setRenderHint( QPainter::Antialiasing );
@@ -59,6 +68,57 @@ QRectF  EffectBoxContainer::boundingRect() const
     return QRectF(0, 0, EFFECT_CONTAINER_WIDTH + m_margin * 2, EFFECT_CONTAINER_HEIGHT + m_margin * 2 );
 }
 
+void    EffectBoxContainer::addInSlotLine( int slot, QGraphicsLineItem* line )
+{
+    if ( slot < 0 && slot >= m_inslots )
+        return;
+    m_inSlotLines[slot] = line;
+}
+
+void    EffectBoxContainer::addOutSlotLine( int slot, QGraphicsLineItem* line )
+{
+    if ( slot < 0 && slot >= m_outslots )
+        return;
+    m_outSlotLines[slot] = line;
+}
+
+QPointF EffectBoxContainer::getSlotPos( int slot, SlotType type )
+{
+    if ( type == InSlot )
+        return getInSlotPos( slot );
+    return getOutSlotPos( slot );
+}
+
+QPointF EffectBoxContainer::getInSlotPos( int slot )
+{
+    if ( slot < 0 && slot >= m_inslots )
+        return QPointF();
+    return QPointF( m_margin, m_margin + ( slot + 1 ) * m_inStep );
+}
+
+QPointF EffectBoxContainer::getOutSlotPos( int slot )
+{
+    if ( slot < 0 && slot >= m_outslots )
+        return QPointF();
+    return QPointF( EFFECT_CONTAINER_WIDTH - m_margin, m_margin + ( slot + 1 ) * m_outStep );
+}
+
+int EffectBoxContainer::getInSlotNumber( QPointF point )
+{
+    for ( int i = 1; i <= m_inslots; ++i )
+        if ( point == QPointF( m_margin, m_margin + i * m_inStep ) )
+            return i - 1;
+    return -1;
+}
+
+int EffectBoxContainer::getOutSlotNumber( QPointF point )
+{
+    for ( int i = 1; i <= m_outslots; ++i )
+        if ( point == QPointF( EFFECT_CONTAINER_WIDTH - m_margin, m_margin + i * m_outStep ) )
+            return i - 1;
+    return -1;
+}
+
 QPointF  EffectBoxContainer::isOnInSlot( QPointF pos )
 {
     for ( int i = 1; i <= m_inslots; ++i )
@@ -66,7 +126,10 @@ QPointF  EffectBoxContainer::isOnInSlot( QPointF pos )
         if ( ( pos.x() >= 0 && pos.x() <= m_margin * 2 ) &&
              ( pos.y() >= m_margin + i * m_inStep - m_inStep / 2 &&
                pos.y() <= m_margin + i * m_inStep + m_inStep / 2 ) )
-        return mapToScene( QPointF( m_margin, m_margin + i * m_inStep ) );
+        {
+            qDebug() << mapToScene( QPointF( m_margin, m_margin + i * m_inStep ) );
+            return mapToScene( QPointF( m_margin, m_margin + i * m_inStep ) );
+        }
     }
     return QPointF();
 }
@@ -81,4 +144,40 @@ QPointF  EffectBoxContainer::isOnOutSlot( QPointF pos )
         return mapToScene( QPointF( EFFECT_CONTAINER_WIDTH - m_margin, m_margin + i * m_outStep ) );
     }
     return QPointF();
+}
+
+QVariant EffectBoxContainer::itemChange( GraphicsItemChange change, const QVariant &value )
+{
+    if ( change == ItemPositionChange )
+    {
+
+        int i = 0;
+        QPointF diffPos = value.toPointF() - pos();
+        moveSlotsLines( m_inSlotLines, m_inslots, diffPos, InSlot );
+        moveSlotsLines( m_outSlotLines, m_outslots, diffPos, OutSlot );
+    }
+    return QGraphicsItem::itemChange(change, value);
+}
+
+void    EffectBoxContainer::moveSlotsLines( QMap<int, QGraphicsLineItem*>& slotsMap, int slotCount, QPointF movement, SlotType type )
+{
+    for ( int i = 0; i < slotCount; ++i )
+    {
+        if ( !slotsMap.contains(i) )
+            continue;
+        if ( mapFromScene( slotsMap[i]->line().p1() ) == getSlotPos( i, type ) )
+        {
+            slotsMap[i]->setLine( slotsMap[i]->line().p2().x(),
+                                       slotsMap[i]->line().p2().y(),
+                                       ( slotsMap[i]->line().p1() + movement ).x(),
+                                       ( slotsMap[i]->line().p1() + movement ).y());
+        }
+        if ( mapFromScene( slotsMap[i]->line().p2() ) == getSlotPos( i, type ) )
+        {
+            slotsMap[i]->setLine( slotsMap[i]->line().p1().x(),
+                                  slotsMap[i]->line().p1().y(),
+                                  ( slotsMap[i]->line().p2() + movement ).x(),
+                                  ( slotsMap[i]->line().p2() + movement ).y() );
+        }
+    }
 }
