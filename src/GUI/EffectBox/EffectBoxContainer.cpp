@@ -68,18 +68,20 @@ QRectF  EffectBoxContainer::boundingRect() const
     return QRectF(0, 0, EFFECT_CONTAINER_WIDTH + m_margin * 2, EFFECT_CONTAINER_HEIGHT + m_margin * 2 );
 }
 
-void    EffectBoxContainer::addInSlotLine( int slot, QGraphicsLineItem* line )
+QMap<int, QGraphicsLineItem*>&  EffectBoxContainer::getLines( SlotType type )
 {
-    if ( slot < 0 && slot >= m_inslots )
-        return;
-    m_inSlotLines[slot] = line;
+    if ( type == InSlot )
+        return m_inSlotLines;
+    else
+        return m_outSlotLines;
 }
 
-void    EffectBoxContainer::addOutSlotLine( int slot, QGraphicsLineItem* line )
+void    EffectBoxContainer::addSlotLine( int slot, QGraphicsLineItem* line, SlotType type )
 {
-    if ( slot < 0 && slot >= m_outslots )
+    if ( ( type == InSlot && slot < 0 && slot >= m_inslots ) ||
+         ( type == OutSlot && slot < 0 && slot >= m_outslots ))
         return;
-    m_outSlotLines[slot] = line;
+    getLines( type )[slot] = line;
 }
 
 QPointF EffectBoxContainer::getSlotPos( int slot, SlotType type )
@@ -180,4 +182,15 @@ void    EffectBoxContainer::moveSlotsLines( QMap<int, QGraphicsLineItem*>& slots
                                   ( slotsMap[i]->line().p2() + movement ).y() );
         }
     }
+}
+
+QGraphicsLineItem*  EffectBoxContainer::getLine( int slot, SlotType type )
+{
+    qDebug() << slot << type;
+    if ( type == InSlot && m_inSlotLines.contains( slot ) )
+        return m_inSlotLines[slot];
+    else if ( type == OutSlot && m_outSlotLines.contains( slot ) )
+        return m_outSlotLines[slot];
+    qDebug() << "You got no line on this slot";
+    return NULL;
 }

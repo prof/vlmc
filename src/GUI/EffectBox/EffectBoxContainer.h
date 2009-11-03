@@ -33,24 +33,25 @@ public:
     enum { Type = UserType + 1 };
     enum SlotType { InSlot = 0, OutSlot };
     EffectBoxContainer( QString name, int inslots, int outslots, QWidget* parent = NULL );
-    virtual ~EffectBoxContainer();
-    QPointF  isOnInSlot( QPointF pos );
-    QPointF  isOnOutSlot( QPointF pos );
-    void    addInSlotLine( int slot, QGraphicsLineItem* line);
-    void    addOutSlotLine( int slot, QGraphicsLineItem* line);
-    QPointF getInSlotPos( int slot );
-    QPointF getOutSlotPos( int slot );
-    int     getInSlotNumber( QPointF point );
-    int     getOutSlotNumber( QPointF point );
-    int     type() const { return Type; }
+    virtual             ~EffectBoxContainer();
+    QPointF             isOnInSlot( QPointF pos );
+    QPointF             isOnOutSlot( QPointF pos );
+    void                addSlotLine( int slot, QGraphicsLineItem* line, SlotType type );
+    QPointF             getInSlotPos( int slot );
+    QPointF             getOutSlotPos( int slot );
+    QGraphicsLineItem*  getLine( int slot, SlotType type );
+    int                 getInSlotNumber( QPointF point );
+    int                 getOutSlotNumber( QPointF point );
+    int                 type() const { return Type; }
 protected:
-    void    paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = NULL );
-    QVariant itemChange( GraphicsItemChange change, const QVariant &value );
-    QRectF  boundingRect() const;
+    void                paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = NULL );
+    QVariant            itemChange( GraphicsItemChange change, const QVariant &value );
+    QRectF              boundingRect() const;
 private:
-    void    moveSlotsLines( QMap<int, QGraphicsLineItem*>& slotsMap, int slotCount, QPointF movement, SlotType );
-    void    drawSlots( QPainter* painter, int lineHPos, int slotNumber, int step );
-    QPointF getSlotPos( int slot, SlotType type );
+    void                moveSlotsLines( QMap<int, QGraphicsLineItem*>& slotsMap, int slotCount, QPointF movement, SlotType );
+    void                drawSlots( QPainter* painter, int lineHPos, int slotNumber, int step );
+    QPointF             getSlotPos( int slot, SlotType type );
+    QMap<int, QGraphicsLineItem*>&  getLines( SlotType type );
 private:
     QString             m_name;
     QMap<int, QGraphicsLineItem*>   m_inSlotLines;

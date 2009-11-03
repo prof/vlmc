@@ -42,28 +42,40 @@ void    EffectBoxScene::addEffect( QString title )
 void    EffectBoxScene::mousePressEvent( QGraphicsSceneMouseEvent* event )
 {
     EffectBoxContainer* box = NULL;
+    int inSlotNumber = -1;
+    int outSlotNumber = -1;
     QGraphicsItem* item = itemAt( event->scenePos() );
     if ( !item )
         goto NoEffectBoxContainer;
     box = qgraphicsitem_cast<EffectBoxContainer*>( item );
     if ( !box )
         goto NoEffectBoxContainer;
+    // We got a valid EffectBoxContainer
     m_box = box;
+    // Get position of clicked slot
     m_currentInSlot = box->isOnInSlot( box->mapFromScene( event->scenePos() ) );
     m_currentOutSlot = box->isOnOutSlot( box->mapFromScene( event->scenePos() ) );
+    // Has a slot been clicked?
     if ( m_currentInSlot.isNull() && m_currentOutSlot.isNull() )
         goto NoEffectBoxContainer;
+    // Does the slots already have a connection?
+    if ( !m_currentInSlot.isNull() )
+        m_currentLine = box->getLine( box->getInSlotNumber( box->mapFromScene( m_currentInSlot ) ), EffectBoxContainer::InSlot );
+    else if ( !m_currentOutSlot.isNull() )
+        m_currentLine = box->getLine( box->getOutSlotNumber( box->mapFromScene( m_currentOutSlot ) ), EffectBoxContainer::OutSlot );
+    // Doesn't he?
     if ( !m_currentLine )
     {
         m_currentLine = new QGraphicsLineItem();
+        // Add the connection
         if ( m_currentInSlot.isNull() )
-            m_box->addOutSlotLine( m_box->getOutSlotNumber(
-                    m_box->mapFromScene( m_currentOutSlot ) ), m_currentLine );
+            m_box->addSlotLine( m_box->getOutSlotNumber(
+                    m_box->mapFromScene( m_currentOutSlot ) ), m_currentLine, EffectBoxContainer::OutSlot );
         else
-            m_box->addInSlotLine( m_box->getInSlotNumber(
-                    m_box->mapFromScene( m_currentInSlot ) ), m_currentLine );
-        addItem( m_currentLine );
+            m_box->addSlotLine( m_box->getInSlotNumber(
+                    m_box->mapFromScene( m_currentInSlot ) ), m_currentLine, EffectBoxContainer::InSlot );
     }
+    addItem( m_currentLine );
     return;
     NoEffectBoxContainer:
     QGraphicsScene::mousePressEvent(event);
@@ -92,21 +104,26 @@ void    EffectBoxScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* event )
     box = qgraphicsitem_cast<EffectBoxContainer*>( item );
     if ( !box )
         goto NoEffectBoxContainer;
+    // We got a EffectBoxContainer
     if ( box == m_box )
     {
+        // We doesn't handle connection between same EffectBoxContainer
         m_box = NULL;
         goto NoEffectBoxContainer;
     }
+    // Get Target Slot Position
     if ( m_currentInSlot.isNull() )
         m_currentInSlot = target = box->isOnInSlot( box->mapFromScene( event->scenePos() ) );
     if ( m_currentOutSlot.isNull() )
         m_currentOutSlot = target = box->isOnOutSlot( box->mapFromScene( event->scenePos() ) );
+    // Have we got a inSlot and an outSlot
     if ( m_currentInSlot.isNull() || m_currentOutSlot.isNull() )
         goto NoEffectBoxContainer;
+    // Add the connection in the EffectBoxContainer
     if ( target == m_currentInSlot )
-        box->addInSlotLine( box->getInSlotNumber( box->mapFromScene( target ) ), m_currentLine );
+        box->addSlotLine( box->getInSlotNumber( box->mapFromScene( target ) ), m_currentLine, EffectBoxContainer::InSlot );
     else
-        box->addOutSlotLine( box->getOutSlotNumber( box->mapFromScene( target ) ), m_currentLine );
+        box->addSlotLine( box->getOutSlotNumber( box->mapFromScene( target ) ), m_currentLine, EffectBoxContainer::OutSlot );
     m_currentLine->setLine( m_currentOutSlot.x(), m_currentOutSlot.y(), m_currentInSlot.x(), m_currentInSlot.y() );
     NoEffectBoxContainer:
     if ( m_currentLine && ( m_currentInSlot.isNull() || m_currentOutSlot.isNull() ) )
