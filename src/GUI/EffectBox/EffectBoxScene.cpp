@@ -108,7 +108,6 @@ void    EffectBoxScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* event )
     else
         box->addOutSlotLine( box->getOutSlotNumber( box->mapFromScene( target ) ), m_currentLine );
     m_currentLine->setLine( m_currentOutSlot.x(), m_currentOutSlot.y(), m_currentInSlot.x(), m_currentInSlot.y() );
-    //addItem( m_currentLine );
     NoEffectBoxContainer:
     if ( m_currentLine && ( m_currentInSlot.isNull() || m_currentOutSlot.isNull() ) )
     {

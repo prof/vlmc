@@ -32,8 +32,8 @@ EffectBoxContainer::EffectBoxContainer( QString name, int inslots, int outslots,
 {
     setFlag( QGraphicsItem::ItemIsMovable, true );
     m_margin = EFFECT_CONTAINER_HEIGHT / 20;
-    m_inStep = ( EFFECT_CONTAINER_HEIGHT - 2 * m_margin ) / ( inslots + 1 );
-    m_outStep = ( EFFECT_CONTAINER_HEIGHT - 2 * m_margin )  / ( outslots + 1 );
+    m_inStep = qRound( ( EFFECT_CONTAINER_HEIGHT - 2 * m_margin ) / ( inslots + 1 ) );
+    m_outStep = qRound( ( EFFECT_CONTAINER_HEIGHT - 2 * m_margin )  / ( outslots + 1 ) );
     m_inslots = inslots;
     m_outslots = outslots;
 }
