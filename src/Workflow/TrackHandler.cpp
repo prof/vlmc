@@ -21,10 +21,11 @@
  *****************************************************************************/
 
 #include "TrackHandler.h"
+#include "TrackWorkflow.h"
 
 LightVideoFrame* TrackHandler::nullOutput = NULL;
 
-TrackHandler::TrackHandler( unsigned int nbTracks, TrackWorkflow::TrackType trackType, EffectsEngine* effectsEngine ) :
+TrackHandler::TrackHandler( unsigned int nbTracks, MainWorkflow::TrackType trackType, EffectsEngine* effectsEngine ) :
         m_trackCount( nbTracks ),
         m_trackType( trackType ),
         m_length( 0 ),
@@ -41,14 +42,12 @@ TrackHandler::TrackHandler( unsigned int nbTracks, TrackWorkflow::TrackType trac
         connect( m_tracks[i], SIGNAL( trackUnpaused() ), this, SLOT( trackUnpaused() ) );
         connect( m_tracks[i], SIGNAL( renderCompleted( unsigned int ) ), this,  SLOT( tracksRenderCompleted( unsigned int ) ), Qt::QueuedConnection );
     }
-    m_highestTrackNumberMutex = new QMutex;
     m_nbTracksToRenderMutex = new QMutex;
 }
 
 TrackHandler::~TrackHandler()
 {
     delete nullOutput;
-    delete m_highestTrackNumberMutex;
     delete m_nbTracksToRenderMutex;
 
     for (unsigned int i = 0; i < m_trackCount; ++i)
@@ -98,10 +97,6 @@ qint64      TrackHandler::getLength() const
 
 void        TrackHandler::getOutput( qint64 currentFrame )
 {
-    {
-        QMutexLocker    lockHighestTrackNumber( m_highestTrackNumberMutex );
-        m_highestTrackNumber = 0;
-    }
     m_renderCompleted = false;
     m_nbTracksToRender = 0;
     m_synchroneRenderingBuffer = NULL;
@@ -109,10 +104,14 @@ void        TrackHandler::getOutput( qint64 currentFrame )
     for ( unsigned int i = 0; i < m_trackCount; ++i )
     {
         if ( m_tracks[i].activated() == false )
+        {
+            m_effectEngine->setInputFrame( *TrackHandler::nullOutput, i );
             continue ;
+        }
         ++m_nbTracksToRender;
         m_tracks[i]->getOutput( currentFrame );
     }
+//    qDebug() << "Tracks to render:" << m_nbTracksToRender;
 }
 
 void        TrackHandler::pause()
@@ -279,21 +278,17 @@ void        TrackHandler::trackUnpaused()
     if ( m_nbTracksToUnpause <= 0 )
     {
         m_paused = false;
-        //FIXME:
-        //emit mainWorkflowUnpaused();
+        emit tracksUnpaused();
     }
 }
 
 void        TrackHandler::tracksRenderCompleted( unsigned int trackId )
 {
-//    qDebug() << "tracksRenderCompleted";
     QMutexLocker    lockNbTracks( m_nbTracksToRenderMutex );
     --m_nbTracksToRender;
 
     {
-        QMutexLocker    lock( m_highestTrackNumberMutex );
-
-        if ( m_trackType == TrackWorkflow::Video )
+        if ( m_trackType == MainWorkflow::VideoTrack )
         {
             LightVideoFrame* buff = reinterpret_cast<LightVideoFrame*>( m_tracks[trackId]->getSynchroneOutput() );
             if ( buff == NULL )
@@ -310,7 +305,6 @@ void        TrackHandler::tracksRenderCompleted( unsigned int trackId )
     //therefore, m_nbTracksToRender will be equal to -1
     if ( m_nbTracksToRender <= 0 )
     {
-//        qDebug() << "main workflow render completed";
         //Just a synchronisation barriere
         m_renderCompleted = true;
         emit allTracksRenderCompleted();

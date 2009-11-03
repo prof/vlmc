@@ -138,7 +138,7 @@ void    ImportController::setUIMetaData( Media* media )
     {
         //Duration
         QTime   duration;
-        duration = duration.addSecs( media->getLength() );
+        duration = duration.addSecs( media->getLengthMS() );
         m_ui->durationValueLabel->setText( duration.toString( "hh:mm:ss" ) );
         //Filename || title
         m_ui->nameValueLabel->setText( media->getFileInfo()->fileName() );
@@ -182,6 +182,11 @@ void    ImportController::treeViewDoubleClicked( const QModelIndex& index )
         forwardButtonClicked();
 }
 
+void    ImportController::reject()
+{
+    m_preview->stop();
+}
+
 void    ImportController::accept()
 {
     QUuid id;
@@ -190,6 +195,7 @@ void    ImportController::accept()
         Media* media = m_model->getMedias()->value( id );
         Library::getInstance()->addMedia( media );
     }
+    m_preview->stop();
     done( Accepted );
 }
 

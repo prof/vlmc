@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Slider.cpp: Enhanced slider for user interactions
+ * LCDTimecode.cpp: Widget that displays an LCD-like timecode
  *****************************************************************************
  * Copyright (C) 2008-2009 the VLMC team
  *
@@ -20,39 +20,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#include "Slider.h"
+#include <QTime>
+#include "LCDTimecode.h"
 
-Slider::Slider( QWidget* parent ) : QSlider( parent ), m_isSliding( false )
+LCDTimecode::LCDTimecode( QWidget* parent )
+    : QLCDNumber( parent )
 {
-    connect( this, SIGNAL( valueChanged(int) ), this, SLOT( sliderChanged(int) ) );
+    setNumDigits( 11 );
+    setTime( 0, 0, 0, 0 );
 }
 
-void Slider::mousePressEvent( QMouseEvent* event )
+void LCDTimecode::setTime( int hours, int minutes, int seconds, int frames )
 {
-    m_isSliding = true;
-    if ( event->button() != Qt::LeftButton &&
-         event->button() != Qt::MidButton )
-    {
-        QSlider::mousePressEvent( event );
-    }
-
-    QMouseEvent newEvent( event->type(), event->pos(), event->globalPos(),
-        Qt::MouseButton( event->button() ^ Qt::LeftButton ^ Qt::MidButton ),
-        Qt::MouseButtons( event->buttons() ^ Qt::LeftButton ^ Qt::MidButton ),
-        event->modifiers() );
-    QSlider::mousePressEvent( &newEvent );
-}
-
-void Slider::mouseReleaseEvent( QMouseEvent* event )
-{
-    m_isSliding = false;
-    QSlider::mouseReleaseEvent( event );
-}
-
-void Slider::sliderChanged( int value )
-{
-    if ( m_isSliding )
-    {
-        emit sliderPosChanged( value );
-    }
+    QString s = QString("%1:%2:%3.%4")
+                .arg( QString::number( hours ), 2, '0' )
+                .arg( QString::number( minutes ), 2, '0' )
+                .arg( QString::number( seconds), 2, '0' )
+                .arg( QString::number( frames ), 2, '0' );
+    display( s );
 }

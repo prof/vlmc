@@ -33,7 +33,6 @@ SOURCES += src/main.cpp \
     src/GUI/MediaListWidget.cpp \
     src/Media/Clip.cpp \
     src/GUI/About.cpp \
-    src/GUI/Slider.cpp \
     src/Metadata/MetaDataWorker.cpp \
     src/Library/Library.cpp \
     src/GUI/GraphicsMovieItem.cpp \
@@ -45,6 +44,7 @@ SOURCES += src/main.cpp \
     src/Workflow/TrackWorkflow.cpp \
     src/Workflow/MainWorkflow.cpp \
     src/GUI/PreviewWidget.cpp \
+    src/GUI/PreviewRuler.cpp \
     src/Renderer/WorkflowRenderer.cpp \
     src/API/vlmc_module_variables.cpp \
     src/API/Module.cpp \
@@ -63,7 +63,6 @@ SOURCES += src/main.cpp \
     src/GUI/VLMCPreferences.cpp \
     src/GUI/VideoProjectPreferences.cpp \
     src/Project/ProjectManager.cpp \
-    src/GUI/FileInfoListModel.cpp \
     src/Configuration/SettingsManager.cpp \
     src/GUI/TagWidget.cpp \
     src/GUI/Library/StackViewController.cpp \
@@ -84,7 +83,8 @@ SOURCES += src/main.cpp \
     src/EffectsEngine/LightVideoFrame.cpp \
     src/EffectsEngine/GenericEffect.cpp \
     src/EffectsEngine/GreenFilterEffect.cpp \
-    src/EffectsEngine/MixerEffect.cpp
+    src/EffectsEngine/MixerEffect.cpp \
+    src/GUI/LCDTimecode.cpp
 HEADERS += src/GUI/MainWindow.h \
     src/GUI/DockWidgetManager.h \
     src/GUI/LibraryWidget.h \
@@ -103,7 +103,6 @@ HEADERS += src/GUI/MainWindow.h \
     src/Media/Clip.h \
     src/GUI/MediaListWidget.h \
     src/GUI/About.h \
-    src/GUI/Slider.h \
     src/Metadata/MetaDataWorker.h \
     src/Tools/Singleton.hpp \
     src/Library/Library.h \
@@ -116,6 +115,7 @@ HEADERS += src/GUI/MainWindow.h \
     src/Workflow/TrackWorkflow.h \
     src/Workflow/MainWorkflow.h \
     src/GUI/PreviewWidget.h \
+    src/GUI/PreviewRuler.h \
     src/Renderer/WorkflowRenderer.h \
     src/Renderer/GenericRenderer.h \
     src/Tools/Toggleable.hpp \
@@ -140,7 +140,6 @@ HEADERS += src/GUI/MainWindow.h \
     src/GUI/AudioProjectPreferences.h \
     src/GUI/VideoProjectPreferences.h \
     src/Project/ProjectManager.h \
-    src/GUI/FileInfoListModel.h \
     src/Configuration/SettingsManager.h \
     src/GUI/TagWidget.h \
     src/GUI/Library/StackViewController.h \
@@ -164,7 +163,8 @@ HEADERS += src/GUI/MainWindow.h \
     src/EffectsEngine/LightVideoFrame.h \
     src/EffectsEngine/GenericEffect.h \
     src/EffectsEngine/GreenFilterEffect.h \
-    src/EffectsEngine/MixerEffect.h
+    src/EffectsEngine/MixerEffect.h \
+    src/GUI/LCDTimecode.h
 FORMS += src/GUI/ui/MainWindow.ui \
     src/GUI/ui/PreviewWidget.ui \
     src/GUI/ui/LanguagePreferences.ui \

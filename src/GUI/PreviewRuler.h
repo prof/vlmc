@@ -1,5 +1,6 @@
 /*****************************************************************************
- * Slider.h: Enhanced slider for user interactions
+ * PreviewRuler.h : Slider/Ruler used into the PreviewWidget
+ * with backward compatibility with QAbstractSlider.
  *****************************************************************************
  * Copyright (C) 2008-2009 the VLMC team
  *
@@ -20,30 +21,50 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#ifndef SLIDER_H
-#define SLIDER_H
+#ifndef PREVIEWRULER_H
+#define PREVIEWRULER_H
 
-#include <QSlider>
-#include <QMouseEvent>
+#include <QAbstractSlider>
+#include <QPaintEvent>
+#include <QPainter>
+#include "GenericRenderer.h"
 
-class Slider : public QSlider
+#define MARK_XSMALL 3
+#define MARK_SMALL 5
+#define MARK_MEDIUM 8
+#define MARK_LARGE 11
+
+class PreviewRuler : public QAbstractSlider
 {
     Q_OBJECT
 public:
-    Slider( QWidget* parent = 0 );
+    PreviewRuler( QWidget* parent = 0 );
+    virtual ~PreviewRuler() { }
+    void setRenderer( GenericRenderer* renderer );
+
+public slots:
+    void setFrame( qint64 frame );
 
 protected:
-    void mousePressEvent( QMouseEvent* event );
-    void mouseReleaseEvent( QMouseEvent* event );
+    virtual void paintEvent( QPaintEvent* event );
+    virtual void mousePressEvent( QMouseEvent* event );
+    virtual void mouseMoveEvent( QMouseEvent* event );
+    virtual void mouseReleaseEvent( QMouseEvent * event );
+    virtual void sliderChange( SliderChange change );
 
 private slots:
-    void sliderChanged( int value );
-
-signals:
-    void sliderPosChanged( int value );
+    void positionChanged();
 
 private:
+    GenericRenderer* m_renderer;
+    qint64 m_frame;
     bool m_isSliding;
+    int m_range;
+
+signals:
+    void frameChanged( qint64 );
+    void sliderPosChanged( int value );
+    void timeChanged( int h, int m, int s, int f );
 };
 
-#endif // SLIDER_H
+#endif // PREVIEWRULER_H

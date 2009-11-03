@@ -1,5 +1,5 @@
 /*****************************************************************************
- * GraphicsCursorItem.h: Timeline's cursor
+ * LCDTimecode.h: Widget that displays an LCD-like timecode
  *****************************************************************************
  * Copyright (C) 2008-2009 the VLMC team
  *
@@ -20,39 +20,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#ifndef GRAPHICSCURSORITEM_H
-#define GRAPHICSCURSORITEM_H
+#ifndef LCDTIMECODE_H
+#define LCDTIMECODE_H
 
-#include <QObject>
-#include <QGraphicsItem>
-#include <QPen>
-#include <QRectF>
-#include <QPainter>
-#include <QCursor>
-#include <QGraphicsSceneMouseEvent>
+#include <QLCDNumber>
 
-class GraphicsCursorItem : public QObject, public QGraphicsItem
+class LCDTimecode : public QLCDNumber
 {
     Q_OBJECT
 public:
-    GraphicsCursorItem( const QPen& pen );
-    int cursorPos() const { return ( int )pos().x(); }
-    virtual QRectF boundingRect() const;
-    void setHeight( int height );
-
-protected:
-    virtual void paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0 );
-    virtual QVariant itemChange( GraphicsItemChange change, const QVariant& value );
-
-private:
-    QPen m_pen;
-    QRectF m_boundingRect;
-
-signals:
-    void cursorPositionChanged( qint64 pos );
+    LCDTimecode( QWidget* parent = 0 );
 
 public slots:
-    void setCursorPos( qint64 position );
+    void setTime( int hours, int minutes = 0, int seconds = 0, int frames = 0 );
 };
 
-#endif // GRAPHICSCURSORITEM_H
+#endif // LCDTIMECODE_H

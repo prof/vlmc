@@ -22,6 +22,7 @@
  *****************************************************************************/
 
 #include <QtDebug>
+#include <QtGlobal>
 
 #include "ClipRenderer.h"
 
@@ -182,6 +183,15 @@ void        ClipRenderer::previousFrame()
     }
 }
 
+qint64      ClipRenderer::getLengthMs() const
+{
+    if ( m_clipLoaded )
+        return qMax( m_end - m_begin, (qint64)0 );
+    else if ( m_selectedMedia )
+        return m_selectedMedia->getLengthMS();
+    return 0;
+}
+
 //FIXME: this won't work with clips !
 void        ClipRenderer::mediaUnloaded( const QUuid& uuid )
 {
@@ -199,6 +209,20 @@ void        ClipRenderer::setSnapshotVisibility( bool val )
 {
    m_previewLabel->setVisible( val );
    m_renderWidget->setVisible( !val );
+}
+
+qint64      ClipRenderer::getCurrentFrame() const
+{
+    if ( m_clipLoaded == false || m_isRendering == false || m_selectedMedia == NULL )
+        return 0;
+    return m_mediaPlayer->getPosition() * ( m_end - m_begin ) - m_begin;
+}
+
+float       ClipRenderer::getFps() const
+{
+    if ( m_selectedMedia != NULL )
+        return m_selectedMedia->getFps();
+    return 0.0f;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -223,7 +247,7 @@ void        ClipRenderer::__positionChanged()
 {
     if ( m_clipLoaded == false)
         return ;
-    
+
     float   begin = m_begin / ( m_end - m_begin );
     float   end = m_end / ( m_end - m_begin );
     float pos = ( m_mediaPlayer->getPosition() - begin ) /
