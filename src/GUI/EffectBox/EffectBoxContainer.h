@@ -40,6 +40,7 @@ public:
     QPointF             getInSlotPos( int slot );
     QPointF             getOutSlotPos( int slot );
     QGraphicsLineItem*  getLine( int slot, SlotType type );
+    void                removeLine( QGraphicsLineItem* line, SlotType type );
     int                 getInSlotNumber( QPointF point );
     int                 getOutSlotNumber( QPointF point );
     int                 type() const { return Type; }

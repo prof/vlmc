@@ -194,3 +194,11 @@ QGraphicsLineItem*  EffectBoxContainer::getLine( int slot, SlotType type )
     qDebug() << "You got no line on this slot";
     return NULL;
 }
+
+void    EffectBoxContainer::removeLine( QGraphicsLineItem* line, SlotType type )
+{
+    if ( type == InSlot && m_inSlotLines.values().contains( line ) )
+        m_inSlotLines.remove( m_inSlotLines.key( line ) );
+    if ( type == OutSlot && m_outSlotLines.values().contains( line ) )
+        m_outSlotLines.remove( m_inSlotLines.key( line ) );
+}
