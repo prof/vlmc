@@ -185,6 +185,7 @@ void    ImportController::treeViewDoubleClicked( const QModelIndex& index )
 void    ImportController::reject()
 {
     m_preview->stop();
+    done( Rejected );
 }
 
 void    ImportController::accept()
