@@ -53,6 +53,8 @@
 #include "Import.h"
 #include "MediaLibraryWidget.h"
 #include "LanguagePreferences.h"
+#include "EffectBoxView.h"
+#include "EffectBoxScene.h"
 
 MainWindow::MainWindow( QWidget *parent ) :
     QMainWindow( parent ), m_renderer( NULL )
@@ -264,6 +266,11 @@ void MainWindow::initializeDockWidgets( void )
                                   QDockWidget::AllDockWidgetFeatures,
                                   Qt::LeftDockWidgetArea );
     setupLibrary();
+<<<<<<< HEAD
+=======
+    setupEffectBox();
+    m_metaDataManager = MetaDataManager::getInstance();
+>>>>>>> kri5_EffectBox
 }
 
 void        MainWindow::createGlobalPreferences()
@@ -413,3 +420,15 @@ void MainWindow::on_actionProject_Wizard_triggered()
     m_pWizard->show();
 }
 
+void MainWindow::setupEffectBox()
+{
+    EffectBoxView* effectBoxView = EffectBoxView::getInstance();
+    DockWidgetManager::instance()->addDockedWidget( effectBoxView,
+                                  tr( "Effect Box" ),
+                                  Qt::AllDockWidgetAreas,
+                                  QDockWidget::AllDockWidgetFeatures,
+                                  Qt::BottomDockWidgetArea );
+    EffectBoxScene* effectBoxScene = new EffectBoxScene( this );
+    effectBoxScene->addEffect( "test" );
+    effectBoxView->setScene( effectBoxScene );
+}

@@ -62,6 +62,7 @@ protected:
 private:
     void        initializeDockWidgets( void );
     void        setupLibrary();
+    void        setupEffectBox();
     void        createStatusBar();
     void        createGlobalPreferences();
     void        createProjectPreferences();
