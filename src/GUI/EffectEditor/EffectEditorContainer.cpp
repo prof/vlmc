@@ -1,9 +1,10 @@
 /*****************************************************************************
- * EffectBoxContainer.cpp: Effect Box Container Item Class
+ * EffectEditorContainer.cpp: Effect Box Container Item Class
  *****************************************************************************
  * Copyright (C) 2008-2009 the VLMC team
  *
  * Authors: Christophe Courtaut <christophe.courtaut@gmail.com>
+ * Authors: Clement CHAVANCE <kinder@vlmc.org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,14 +21,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#include "EffectBoxContainer.h"
+#include "EffectEditorContainer.h"
 #include <QDebug>
 
 
 #define EFFECT_CONTAINER_WIDTH 100
 #define EFFECT_CONTAINER_HEIGHT 100
 
-EffectBoxContainer::EffectBoxContainer( QString name, int inslots, int outslots,
+EffectEditorContainer::EffectEditorContainer( QString name, int inslots, int outslots,
                                         QWidget* parent ) : m_name( name )
 {
     setFlag( QGraphicsItem::ItemIsMovable, true );
@@ -38,7 +39,7 @@ EffectBoxContainer::EffectBoxContainer( QString name, int inslots, int outslots,
     m_outslots = outslots;
 }
 
-EffectBoxContainer::~EffectBoxContainer()
+EffectEditorContainer::~EffectEditorContainer()
 {
     QGraphicsLineItem* line;
     foreach( line, m_inSlotLines.values() )
@@ -47,7 +48,7 @@ EffectBoxContainer::~EffectBoxContainer()
         delete line;
 }
 
-void    EffectBoxContainer::paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* parent )
+void    EffectEditorContainer::paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* parent )
 {
     painter->setRenderHint( QPainter::Antialiasing );
     painter->drawRect( m_margin, m_margin, EFFECT_CONTAINER_HEIGHT - 2 * m_margin, EFFECT_CONTAINER_WIDTH - 2 * m_margin );
@@ -57,18 +58,18 @@ void    EffectBoxContainer::paint( QPainter* painter, const QStyleOptionGraphics
     drawSlots( painter, EFFECT_CONTAINER_WIDTH - 2 * m_margin, m_outslots, m_outStep );
 }
 
-void    EffectBoxContainer::drawSlots( QPainter* painter, int lineHPos, int slotNumber, int step )
+void    EffectEditorContainer::drawSlots( QPainter* painter, int lineHPos, int slotNumber, int step )
 {
     for ( int i = 1; i <= slotNumber; ++i )
         painter->drawLine( lineHPos, m_margin + i * step, lineHPos + m_margin * 2 , m_margin + i * step );
 }
 
-QRectF  EffectBoxContainer::boundingRect() const
+QRectF  EffectEditorContainer::boundingRect() const
 {
     return QRectF(0, 0, EFFECT_CONTAINER_WIDTH + m_margin * 2, EFFECT_CONTAINER_HEIGHT + m_margin * 2 );
 }
 
-QMap<int, QGraphicsLineItem*>&  EffectBoxContainer::getLines( SlotType type )
+QMap<int, QGraphicsLineItem*>&  EffectEditorContainer::getLines( SlotType type )
 {
     if ( type == InSlot )
         return m_inSlotLines;
@@ -76,7 +77,7 @@ QMap<int, QGraphicsLineItem*>&  EffectBoxContainer::getLines( SlotType type )
         return m_outSlotLines;
 }
 
-void    EffectBoxContainer::addSlotLine( int slot, QGraphicsLineItem* line, SlotType type )
+void    EffectEditorContainer::addSlotLine( int slot, QGraphicsLineItem* line, SlotType type )
 {
     if ( ( type == InSlot && slot < 0 && slot >= m_inslots ) ||
          ( type == OutSlot && slot < 0 && slot >= m_outslots ))
@@ -84,28 +85,28 @@ void    EffectBoxContainer::addSlotLine( int slot, QGraphicsLineItem* line, Slot
     getLines( type )[slot] = line;
 }
 
-QPointF EffectBoxContainer::getSlotPos( int slot, SlotType type )
+QPointF EffectEditorContainer::getSlotPos( int slot, SlotType type )
 {
     if ( type == InSlot )
         return getInSlotPos( slot );
     return getOutSlotPos( slot );
 }
 
-QPointF EffectBoxContainer::getInSlotPos( int slot )
+QPointF EffectEditorContainer::getInSlotPos( int slot )
 {
     if ( slot < 0 && slot >= m_inslots )
         return QPointF();
     return QPointF( m_margin, m_margin + ( slot + 1 ) * m_inStep );
 }
 
-QPointF EffectBoxContainer::getOutSlotPos( int slot )
+QPointF EffectEditorContainer::getOutSlotPos( int slot )
 {
     if ( slot < 0 && slot >= m_outslots )
         return QPointF();
     return QPointF( EFFECT_CONTAINER_WIDTH - m_margin, m_margin + ( slot + 1 ) * m_outStep );
 }
 
-int EffectBoxContainer::getInSlotNumber( QPointF point )
+int EffectEditorContainer::getInSlotNumber( QPointF point )
 {
     for ( int i = 1; i <= m_inslots; ++i )
         if ( point == QPointF( m_margin, m_margin + i * m_inStep ) )
@@ -113,7 +114,7 @@ int EffectBoxContainer::getInSlotNumber( QPointF point )
     return -1;
 }
 
-int EffectBoxContainer::getOutSlotNumber( QPointF point )
+int EffectEditorContainer::getOutSlotNumber( QPointF point )
 {
     for ( int i = 1; i <= m_outslots; ++i )
         if ( point == QPointF( EFFECT_CONTAINER_WIDTH - m_margin, m_margin + i * m_outStep ) )
@@ -121,7 +122,7 @@ int EffectBoxContainer::getOutSlotNumber( QPointF point )
     return -1;
 }
 
-QPointF  EffectBoxContainer::isOnInSlot( QPointF pos )
+QPointF  EffectEditorContainer::isOnInSlot( QPointF pos )
 {
     for ( int i = 1; i <= m_inslots; ++i )
     {
@@ -136,7 +137,7 @@ QPointF  EffectBoxContainer::isOnInSlot( QPointF pos )
     return QPointF();
 }
 
-QPointF  EffectBoxContainer::isOnOutSlot( QPointF pos )
+QPointF  EffectEditorContainer::isOnOutSlot( QPointF pos )
 {
     for ( int i = 1; i <= m_outslots; ++i )
     {
@@ -148,7 +149,7 @@ QPointF  EffectBoxContainer::isOnOutSlot( QPointF pos )
     return QPointF();
 }
 
-QVariant EffectBoxContainer::itemChange( GraphicsItemChange change, const QVariant &value )
+QVariant EffectEditorContainer::itemChange( GraphicsItemChange change, const QVariant &value )
 {
     if ( change == ItemPositionChange )
     {
@@ -161,7 +162,7 @@ QVariant EffectBoxContainer::itemChange( GraphicsItemChange change, const QVaria
     return QGraphicsItem::itemChange(change, value);
 }
 
-void    EffectBoxContainer::moveSlotsLines( QMap<int, QGraphicsLineItem*>& slotsMap, int slotCount, QPointF movement, SlotType type )
+void    EffectEditorContainer::moveSlotsLines( QMap<int, QGraphicsLineItem*>& slotsMap, int slotCount, QPointF movement, SlotType type )
 {
     for ( int i = 0; i < slotCount; ++i )
     {
@@ -184,7 +185,7 @@ void    EffectBoxContainer::moveSlotsLines( QMap<int, QGraphicsLineItem*>& slots
     }
 }
 
-QGraphicsLineItem*  EffectBoxContainer::getLine( int slot, SlotType type )
+QGraphicsLineItem*  EffectEditorContainer::getLine( int slot, SlotType type )
 {
     qDebug() << slot << type;
     if ( type == InSlot && m_inSlotLines.contains( slot ) )
@@ -195,7 +196,7 @@ QGraphicsLineItem*  EffectBoxContainer::getLine( int slot, SlotType type )
     return NULL;
 }
 
-void    EffectBoxContainer::removeLine( QGraphicsLineItem* line, SlotType type )
+void    EffectEditorContainer::removeLine( QGraphicsLineItem* line, SlotType type )
 {
     if ( type == InSlot && m_inSlotLines.values().contains( line ) )
         m_inSlotLines.remove( m_inSlotLines.key( line ) );

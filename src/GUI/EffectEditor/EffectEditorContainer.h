@@ -1,5 +1,5 @@
 /*****************************************************************************
- * EffectBoxContainer.h: Effect Box Container Item Class
+ * EffectEditorContainer.h: Effect Box Container Item Class
  *****************************************************************************
  * Copyright (C) 2008-2009 the VLMC team
  *
@@ -20,20 +20,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#ifndef EFFECTBOXCONTAINER_H
-#define EFFECTBOXCONTAINER_H
+#ifndef EFFECTEDITORCONTAINER_H
+#define EFFECTEDITORCONTAINER_H
 
 #include <QGraphicsItemGroup>
 #include <QPainter>
 #include <QMap>
 
-class EffectBoxContainer : public QGraphicsItem
+class EffectEditorContainer : public QGraphicsItem
 {
 public:
     enum { Type = UserType + 1 };
     enum SlotType { InSlot = 0, OutSlot };
-    EffectBoxContainer( QString name, int inslots, int outslots, QWidget* parent = NULL );
-    virtual             ~EffectBoxContainer();
+    EffectEditorContainer( QString name, int inslots, int outslots, QWidget* parent = NULL );
+    virtual             ~EffectEditorContainer();
     QPointF             isOnInSlot( QPointF pos );
     QPointF             isOnOutSlot( QPointF pos );
     void                addSlotLine( int slot, QGraphicsLineItem* line, SlotType type );

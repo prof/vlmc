@@ -25,14 +25,12 @@
 
 #include <QGraphicsView>
 
-#include "Singleton.hpp"
-
-class EffectBoxView : public QGraphicsView, public Singleton<EffectBoxView>
+class EffectEditorView : public QGraphicsView
 {
     Q_OBJECT
-    Q_DISABLE_COPY(EffectBoxView)
+    Q_DISABLE_COPY(EffectEditorView)
 public:
-    EffectBoxView();
+    EffectEditorView();
 };
 
 #endif // EFFECTBOXVIEW_H

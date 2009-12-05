@@ -1,5 +1,5 @@
 /*****************************************************************************
- * EffectBoxScene.cpp: Effect Box Scene
+ * EffectEditorScene.cpp: Effect Box Scene
  *****************************************************************************
  * Copyright (C) 2008-2009 the VLMC team
  *
@@ -20,37 +20,37 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-#include "EffectBoxScene.h"
-#include "EffectBoxContainer.h"
+#include "EffectEditorScene.h"
+#include "EffectEditorContainer.h"
 
 #include <QPointF>
 #include <QDebug>
 
-EffectBoxScene::EffectBoxScene( QWidget* parent ) : m_currentLine( NULL ), m_box( NULL )
+EffectEditorScene::EffectEditorScene( QWidget* parent ) : m_currentLine( NULL ), m_box( NULL )
 {
 
 }
 
-void    EffectBoxScene::addEffect( QString title )
+void    EffectEditorScene::addEffect( QString title )
 {
-    EffectBoxContainer* container = new EffectBoxContainer( title, 4, 2 );
+    EffectEditorContainer* container = new EffectEditorContainer( title, 4, 2 );
     addItem( container );
-    container = new EffectBoxContainer( "Poulpe", 6, 8 );
+    container = new EffectEditorContainer( "Poulpe", 6, 8 );
     addItem( container );
 }
 
-void    EffectBoxScene::mousePressEvent( QGraphicsSceneMouseEvent* event )
+void    EffectEditorScene::mousePressEvent( QGraphicsSceneMouseEvent* event )
 {
-    EffectBoxContainer* box = NULL;
+    EffectEditorContainer* box = NULL;
     int inSlotNumber = -1;
     int outSlotNumber = -1;
     QGraphicsItem* item = itemAt( event->scenePos() );
     if ( !item )
         goto NoEffectBoxContainer;
-    box = qgraphicsitem_cast<EffectBoxContainer*>( item );
+    box = qgraphicsitem_cast<EffectEditorContainer*>( item );
     if ( !box )
         goto NoEffectBoxContainer;
-    // We got a valid EffectBoxContainer
+    // We got a valid EffectEditorContainer
     m_box = box;
     // Get position of clicked slot
     m_currentInSlot = box->isOnInSlot( box->mapFromScene( event->scenePos() ) );
@@ -60,9 +60,9 @@ void    EffectBoxScene::mousePressEvent( QGraphicsSceneMouseEvent* event )
         goto NoEffectBoxContainer;
     // Does the slots already have a connection?
     if ( !m_currentInSlot.isNull() )
-        m_currentLine = box->getLine( box->getInSlotNumber( box->mapFromScene( m_currentInSlot ) ), EffectBoxContainer::InSlot );
+        m_currentLine = box->getLine( box->getInSlotNumber( box->mapFromScene( m_currentInSlot ) ), EffectEditorContainer::InSlot );
     else if ( !m_currentOutSlot.isNull() )
-        m_currentLine = box->getLine( box->getOutSlotNumber( box->mapFromScene( m_currentOutSlot ) ), EffectBoxContainer::OutSlot );
+        m_currentLine = box->getLine( box->getOutSlotNumber( box->mapFromScene( m_currentOutSlot ) ), EffectEditorContainer::OutSlot );
     // Doesn't he?
     if ( !m_currentLine )
     {
@@ -72,10 +72,10 @@ void    EffectBoxScene::mousePressEvent( QGraphicsSceneMouseEvent* event )
         // Add the connection
         if ( m_currentInSlot.isNull() )
             m_box->addSlotLine( m_box->getOutSlotNumber(
-                    m_box->mapFromScene( m_currentOutSlot ) ), m_currentLine, EffectBoxContainer::OutSlot );
+                    m_box->mapFromScene( m_currentOutSlot ) ), m_currentLine, EffectEditorContainer::OutSlot );
         else
             m_box->addSlotLine( m_box->getInSlotNumber(
-                    m_box->mapFromScene( m_currentInSlot ) ), m_currentLine, EffectBoxContainer::InSlot );
+                    m_box->mapFromScene( m_currentInSlot ) ), m_currentLine, EffectEditorContainer::InSlot );
         addItem( m_currentLine );
     }
     return;
@@ -84,7 +84,7 @@ void    EffectBoxScene::mousePressEvent( QGraphicsSceneMouseEvent* event )
     return;
 }
 
-void    EffectBoxScene::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
+void    EffectEditorScene::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
 {
     QPointF origin;
     if ( m_currentInSlot.isNull() && m_currentOutSlot.isNull() )
@@ -96,17 +96,17 @@ void    EffectBoxScene::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
     return;
 }
 
-void    EffectBoxScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* event )
+void    EffectEditorScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* event )
 {
-    EffectBoxContainer* box = NULL;
+    EffectEditorContainer* box = NULL;
     QPointF target;
     QGraphicsItem* item = itemAt( event->scenePos() );
     if ( !item )
         goto NoEffectBoxContainer;
-    box = qgraphicsitem_cast<EffectBoxContainer*>( item );
+    box = qgraphicsitem_cast<EffectEditorContainer*>( item );
     if ( !box )
         goto NoEffectBoxContainer;
-    // We got a EffectBoxContainer
+    // We got a EffectEditorContainer
     // Get Target Slot Position
     if ( m_currentInSlot.isNull() )
         m_currentInSlot = target = box->isOnInSlot( box->mapFromScene( event->scenePos() ) );
@@ -115,19 +115,19 @@ void    EffectBoxScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* event )
     // Have we got a inSlot and an outSlot
     if ( m_currentInSlot.isNull() || m_currentOutSlot.isNull() )
         goto NoEffectBoxContainer;
-    // Add the connection in the EffectBoxContainer
+    // Add the connection in the EffectEditorContainer
     if ( target == m_currentInSlot )
-        box->addSlotLine( box->getInSlotNumber( box->mapFromScene( target ) ), m_currentLine, EffectBoxContainer::InSlot );
+        box->addSlotLine( box->getInSlotNumber( box->mapFromScene( target ) ), m_currentLine, EffectEditorContainer::InSlot );
     else
-        box->addSlotLine( box->getOutSlotNumber( box->mapFromScene( target ) ), m_currentLine, EffectBoxContainer::OutSlot );
+        box->addSlotLine( box->getOutSlotNumber( box->mapFromScene( target ) ), m_currentLine, EffectEditorContainer::OutSlot );
     m_currentLine->setLine( m_currentOutSlot.x(), m_currentOutSlot.y(), m_currentInSlot.x(), m_currentInSlot.y() );
     NoEffectBoxContainer:
     if ( m_currentLine && ( m_currentInSlot.isNull() || m_currentOutSlot.isNull() ) )
     {
         if ( m_box->getInSlotNumber( m_box->mapFromScene( m_currentInSlot ) ) != -1 )
-            m_box->removeLine( m_currentLine, EffectBoxContainer::InSlot );
+            m_box->removeLine( m_currentLine, EffectEditorContainer::InSlot );
         if ( m_box->getOutSlotNumber( m_box->mapFromScene( m_currentOutSlot ) ) != -1 )
-            m_box->removeLine( m_currentLine, EffectBoxContainer::OutSlot );
+            m_box->removeLine( m_currentLine, EffectEditorContainer::OutSlot );
         if ( items().contains( m_currentLine ))
             removeItem( m_currentLine );
         delete m_currentLine;

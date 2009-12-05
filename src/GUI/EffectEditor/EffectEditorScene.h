@@ -1,5 +1,5 @@
 /*****************************************************************************
- * EffectBoxScene.h: Effect Box Scene
+ * EffectEditorScene.h: Effect Box Scene
  *****************************************************************************
  * Copyright (C) 2008-2009 the VLMC team
  *
@@ -26,12 +26,12 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 
-#include "EffectBoxContainer.h"
+#include "EffectEditorContainer.h"
 
-class EffectBoxScene : public QGraphicsScene
+class EffectEditorScene : public QGraphicsScene
 {
 public:
-    EffectBoxScene( QWidget* parent = NULL );
+    EffectEditorScene( QWidget* parent = NULL );
 
     void    addEffect(QString title);
     void    mousePressEvent( QGraphicsSceneMouseEvent* event );
@@ -41,7 +41,7 @@ private:
     QPointF m_currentInSlot;
     QPointF m_currentOutSlot;
     QGraphicsLineItem* m_currentLine;
-    EffectBoxContainer* m_box;
+    EffectEditorContainer* m_box;
 };
 
 #endif // EFFECTBOXSCENE_H

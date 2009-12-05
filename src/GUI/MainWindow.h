@@ -34,12 +34,14 @@
 #include "DockWidgetManager.h"
 #include "LanguagePreferences.h"
 #include "Timeline.h"
+#include "WorkflowRenderer.h"
 #include "WorkflowFileRenderer.h"
 #include "PreviewWidget.h"
 #include "Settings.h"
 #include "EffectsEngine.h"
 #include "MainWorkflow.h"
 #include "ProjectWizard.h"
+#include "EffectEditorView.h"
 
 class MainWindow : public QMainWindow
 {
@@ -62,7 +64,7 @@ protected:
 private:
     void        initializeDockWidgets( void );
     void        setupLibrary();
-    void        setupEffectBox();
+    void        setupMainWidget( WorkflowRenderer* wRenderer );
     void        createStatusBar();
     void        createGlobalPreferences();
     void        createProjectPreferences();
@@ -70,6 +72,8 @@ private:
     Ui::MainWindow          m_ui;
     QSlider*                m_zoomSlider;
     Timeline*               m_timeline;
+    EffectEditorView*       m_effectEditor;
+    QStackedWidget*         m_mainWidget;
     PreviewWidget*          m_clipPreview;
     PreviewWidget*          m_projectPreview;
     WorkflowFileRenderer*   m_renderer;
@@ -94,6 +98,7 @@ private slots:
     void on_actionProject_Preferences_triggered();
     void on_actionProject_Wizard_triggered();
     void toolButtonClicked( int id );
+    void switchMainWidget();
 
 signals:
     void translateDockWidgetTitle();

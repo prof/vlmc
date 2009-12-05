@@ -53,8 +53,8 @@
 #include "Import.h"
 #include "MediaLibraryWidget.h"
 #include "LanguagePreferences.h"
-#include "EffectBoxView.h"
-#include "EffectBoxScene.h"
+#include "EffectEditorView.h"
+#include "EffectEditorScene.h"
 
 MainWindow::MainWindow( QWidget *parent ) :
     QMainWindow( parent ), m_renderer( NULL )
@@ -230,15 +230,22 @@ void MainWindow::createStatusBar()
     m_ui.statusbar->addPermanentWidget( zoomInButton );
     connect( zoomInButton, SIGNAL( clicked() ),
              this, SLOT( zoomIn() ) );
+
+    //Switch between timeline and EffectEditor
+    QToolButton* switchButton = new QToolButton( this );
+    switchButton->setText( tr( "Switch" ) ); //Temporary, will change in a near future
+    m_ui.statusbar->addPermanentWidget( switchButton );
+    connect( switchButton, SIGNAL( clicked() ),
+             this, SLOT( switchMainWidget() ) );
 }
 
 void MainWindow::initializeDockWidgets( void )
 {
     WorkflowRenderer*    workflowRenderer = new WorkflowRenderer();
-    m_timeline = new Timeline( workflowRenderer, this );
-    m_timeline->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
-    m_timeline->show();
-    setCentralWidget( m_timeline );
+    setupMainWidget( workflowRenderer );
+    m_mainWidget->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+    m_mainWidget->show();
+    setCentralWidget( m_mainWidget );
 
     DockWidgetManager *dockManager = DockWidgetManager::instance();
 
@@ -266,11 +273,6 @@ void MainWindow::initializeDockWidgets( void )
                                   QDockWidget::AllDockWidgetFeatures,
                                   Qt::LeftDockWidgetArea );
     setupLibrary();
-<<<<<<< HEAD
-=======
-    setupEffectBox();
-    m_metaDataManager = MetaDataManager::getInstance();
->>>>>>> kri5_EffectBox
 }
 
 void        MainWindow::createGlobalPreferences()
@@ -420,15 +422,28 @@ void MainWindow::on_actionProject_Wizard_triggered()
     m_pWizard->show();
 }
 
-void MainWindow::setupEffectBox()
+void MainWindow::setupMainWidget( WorkflowRenderer* wRenderer )
 {
-    EffectBoxView* effectBoxView = EffectBoxView::getInstance();
-    DockWidgetManager::instance()->addDockedWidget( effectBoxView,
-                                  tr( "Effect Box" ),
-                                  Qt::AllDockWidgetAreas,
-                                  QDockWidget::AllDockWidgetFeatures,
-                                  Qt::BottomDockWidgetArea );
-    EffectBoxScene* effectBoxScene = new EffectBoxScene( this );
-    effectBoxScene->addEffect( "test" );
-    effectBoxView->setScene( effectBoxScene );
+    //TODO : Build Timeline and Effect Editor here
+    m_mainWidget = new QStackedWidget( this );
+    m_timeline = new Timeline( wRenderer, this );
+    m_mainWidget->addWidget( m_timeline );
+    m_effectEditor = new EffectEditorView();
+    //DockWidgetManager::instance()->addDockedWidget( effectBoxView,
+    //                             tr( "Effect Box" ),
+    //                             Qt::AllDockWidgetAreas,
+    //                             QDockWidget::AllDockWidgetFeatures,
+    //                             Qt::BottomDockWidgetArea );
+    EffectEditorScene* effectEditorScene = new EffectEditorScene( this );
+    effectEditorScene->addEffect( "test" );
+    m_effectEditor->setScene( effectEditorScene );
+    m_mainWidget->addWidget( m_effectEditor );
+}
+
+void MainWindow::switchMainWidget()
+{
+    int currIdx = m_mainWidget->currentIndex();
+    int idx = ++currIdx >= m_mainWidget->count() ? 0 : currIdx;
+    m_mainWidget->setCurrentIndex( idx );
+    return ;
 }

@@ -28,6 +28,7 @@ include(src/GUI/library/library.pri)
 include(src/GUI/settings/settings.pri)
 include(src/GUI/widgets/widgets.pri)
 include(src/GUI/wizard/wizard.pri)
+include(src/GUI/EffectEditor/EffectEditor.pri)
 include(src/LibVLCpp/LibVLCpp.pri)
 include(src/Library/Library.pri)
 include(src/Media/Media.pri)
@@ -44,6 +45,7 @@ INCLUDEPATH += src/LibVLCpp \
     src/GUI/import \
     src/GUI/settings \
     src/GUI/wizard \
+    src/GUI/EffectEditor \
     src/Tools \
     src/Renderer \
     src/Metadata \
@@ -61,6 +63,7 @@ INCLUDEPATH += src/LibVLCpp \
 DEPENDPATH += src/LibVLCpp \
     src/GUI \
     src/GUI/import \
+    src/GUI/EffectEditor \
     src/GUI/library \
     src/GUI/settings \
     src/GUI/widgets \

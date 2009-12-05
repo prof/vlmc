@@ -21,9 +21,9 @@
  *****************************************************************************/
 
 
-#include "EffectBoxView.h"
+#include "EffectEditorView.h"
 
-EffectBoxView::EffectBoxView()
+EffectEditorView::EffectEditorView()
 {
     setInteractive( true );
     setRenderHint( QPainter::Antialiasing );
