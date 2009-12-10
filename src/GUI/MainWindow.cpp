@@ -424,19 +424,10 @@ void MainWindow::on_actionProject_Wizard_triggered()
 
 void MainWindow::setupMainWidget( WorkflowRenderer* wRenderer )
 {
-    //TODO : Build Timeline and Effect Editor here
     m_mainWidget = new QStackedWidget( this );
     m_timeline = new Timeline( wRenderer, this );
     m_mainWidget->addWidget( m_timeline );
-    m_effectEditor = new EffectEditorView();
-    //DockWidgetManager::instance()->addDockedWidget( effectBoxView,
-    //                             tr( "Effect Box" ),
-    //                             Qt::AllDockWidgetAreas,
-    //                             QDockWidget::AllDockWidgetFeatures,
-    //                             Qt::BottomDockWidgetArea );
-    EffectEditorScene* effectEditorScene = new EffectEditorScene( this );
-    effectEditorScene->addEffect( "test" );
-    m_effectEditor->setScene( effectEditorScene );
+    m_effectEditor = new EffectEditorWidget( this );
     m_mainWidget->addWidget( m_effectEditor );
 }
 

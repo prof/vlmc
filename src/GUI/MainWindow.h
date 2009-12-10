@@ -41,7 +41,7 @@
 #include "EffectsEngine.h"
 #include "MainWorkflow.h"
 #include "ProjectWizard.h"
-#include "EffectEditorView.h"
+#include "EffectEditorWidget.h"
 
 class MainWindow : public QMainWindow
 {
@@ -72,7 +72,7 @@ private:
     Ui::MainWindow          m_ui;
     QSlider*                m_zoomSlider;
     Timeline*               m_timeline;
-    EffectEditorView*       m_effectEditor;
+    EffectEditorWidget*     m_effectEditor;
     QStackedWidget*         m_mainWidget;
     PreviewWidget*          m_clipPreview;
     PreviewWidget*          m_projectPreview;

@@ -1,9 +1,11 @@
 SOURCES += EffectEditorContainer.cpp \
     EffectEditorScene.cpp \
-    EffectEditorView.cpp
+    EffectEditorView.cpp   \
+    EffectEditorWidget.cpp
 
 HEADERS += EffectEditorContainer.h \
     EffectEditorScene.h \
-    EffectEditorView.h
+    EffectEditorView.h \
+    EffectEditorWidget.h
 
 
