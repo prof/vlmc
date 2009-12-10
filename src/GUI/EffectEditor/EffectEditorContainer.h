@@ -26,42 +26,48 @@
 #include <QGraphicsItemGroup>
 #include <QPainter>
 #include <QMap>
+#include <QObject>
 
-class EffectEditorContainer : public QGraphicsItem
+class EffectEditorContainer : public QObject, public QGraphicsItem
 {
-public:
-    enum { Type = UserType + 1 };
-    enum SlotType { InSlot = 0, OutSlot };
-    EffectEditorContainer( QString name, int inslots, int outslots, QWidget* parent = NULL );
-    virtual             ~EffectEditorContainer();
-    QPointF             isOnInSlot( QPointF pos );
-    QPointF             isOnOutSlot( QPointF pos );
-    void                addSlotLine( int slot, QGraphicsLineItem* line, SlotType type );
-    QPointF             getInSlotPos( int slot );
-    QPointF             getOutSlotPos( int slot );
-    QGraphicsLineItem*  getLine( int slot, SlotType type );
-    void                removeLine( QGraphicsLineItem* line, SlotType type );
-    int                 getInSlotNumber( QPointF point );
-    int                 getOutSlotNumber( QPointF point );
-    int                 type() const { return Type; }
-protected:
-    void                paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = NULL );
-    QVariant            itemChange( GraphicsItemChange change, const QVariant &value );
-    QRectF              boundingRect() const;
-private:
-    void                moveSlotsLines( QMap<int, QGraphicsLineItem*>& slotsMap, int slotCount, QPointF movement, SlotType );
-    void                drawSlots( QPainter* painter, int lineHPos, int slotNumber, int step );
-    QPointF             getSlotPos( int slot, SlotType type );
-    QMap<int, QGraphicsLineItem*>&  getLines( SlotType type );
-private:
-    QString             m_name;
-    QMap<int, QGraphicsLineItem*>   m_inSlotLines;
-    QMap<int, QGraphicsLineItem*>   m_outSlotLines;
-    int         m_inslots;
-    int         m_outslots;
-    qreal       m_margin;
-    qreal       m_inStep;
-    qreal       m_outStep;
+    Q_OBJECT
+    public:
+        enum { Type = UserType + 1 };
+        enum SlotType { InSlot = 0, OutSlot };
+        EffectEditorContainer( QString name, int inslots, int outslots, QWidget* parent = NULL );
+        virtual             ~EffectEditorContainer();
+        QPointF             isOnInSlot( QPointF pos );
+        QPointF             isOnOutSlot( QPointF pos );
+        void                addSlotLine( int slot, QGraphicsLineItem* line, SlotType type );
+        QPointF             getInSlotPos( int slot );
+        QPointF             getOutSlotPos( int slot );
+        QGraphicsLineItem*  getLine( int slot, SlotType type );
+        void                removeLine( QGraphicsLineItem* line, SlotType type );
+        int                 getInSlotNumber( QPointF point );
+        int                 getOutSlotNumber( QPointF point );
+        int                 type() const { return Type; }
+    protected:
+        void                paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = NULL );
+        QVariant            itemChange( GraphicsItemChange change, const QVariant &value );
+        QRectF              boundingRect() const;
+        void                mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event );
+    private:
+        void                moveSlotsLines( QMap<int, QGraphicsLineItem*>& slotsMap, int slotCount, QPointF movement, SlotType );
+        void                drawSlots( QPainter* painter, int lineHPos, int slotNumber, int step );
+        QPointF             getSlotPos( int slot, SlotType type );
+        QMap<int, QGraphicsLineItem*>&  getLines( SlotType type );
+    private:
+        QString             m_name;
+        QMap<int, QGraphicsLineItem*>   m_inSlotLines;
+        QMap<int, QGraphicsLineItem*>   m_outSlotLines;
+        int         m_inslots;
+        int         m_outslots;
+        qreal       m_margin;
+        qreal       m_inStep;
+        qreal       m_outStep;
+
+    signals:
+        void        magnify( const QString& name );
 };
 
 #endif // EFFECTBOXCONTAINER_H

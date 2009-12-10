@@ -24,19 +24,20 @@
 #include "EffectEditorContainer.h"
 
 #include <QPointF>
-#include <QDebug>
+#include <QtDebug>
 
 EffectEditorScene::EffectEditorScene( QWidget* parent ) : m_currentLine( NULL ), m_box( NULL )
 {
-
 }
 
 void    EffectEditorScene::addEffect( QString title )
 {
     EffectEditorContainer* container = new EffectEditorContainer( title, 4, 2 );
     addItem( container );
-    container = new EffectEditorContainer( "Poulpe", 6, 8 );
-    addItem( container );
+    connect( container, SIGNAL( magnify( const QString& ) ),
+             SIGNAL( magnifyContainer( const QString& ) ) );
+    //container = new EffectEditorContainer( "Poulpe", 6, 8 );
+    //addItem( container );
 }
 
 void    EffectEditorScene::mousePressEvent( QGraphicsSceneMouseEvent* event )
@@ -79,7 +80,7 @@ void    EffectEditorScene::mousePressEvent( QGraphicsSceneMouseEvent* event )
         addItem( m_currentLine );
     }
     return;
-    NoEffectBoxContainer:
+NoEffectBoxContainer:
     QGraphicsScene::mousePressEvent(event);
     return;
 }
@@ -91,7 +92,7 @@ void    EffectEditorScene::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
         goto NoEffect;
     origin = m_currentInSlot.isNull() ? m_currentOutSlot : m_currentInSlot;
     m_currentLine->setLine( origin.x(), origin.y(), event->scenePos().x(), event->scenePos().y() );
-    NoEffect:
+NoEffect:
     QGraphicsScene::mouseMoveEvent( event );
     return;
 }
@@ -121,7 +122,7 @@ void    EffectEditorScene::mouseReleaseEvent( QGraphicsSceneMouseEvent* event )
     else
         box->addSlotLine( box->getOutSlotNumber( box->mapFromScene( target ) ), m_currentLine, EffectEditorContainer::OutSlot );
     m_currentLine->setLine( m_currentOutSlot.x(), m_currentOutSlot.y(), m_currentInSlot.x(), m_currentInSlot.y() );
-    NoEffectBoxContainer:
+NoEffectBoxContainer:
     if ( m_currentLine && ( m_currentInSlot.isNull() || m_currentOutSlot.isNull() ) )
     {
         if ( m_box->getInSlotNumber( m_box->mapFromScene( m_currentInSlot ) ) != -1 )

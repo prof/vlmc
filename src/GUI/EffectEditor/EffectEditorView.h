@@ -24,13 +24,18 @@
 #define EFFECTBOXVIEW_H
 
 #include <QGraphicsView>
+#include <QString>
 
 class EffectEditorView : public QGraphicsView
 {
     Q_OBJECT
     Q_DISABLE_COPY(EffectEditorView)
-public:
-    EffectEditorView();
+    public:
+        EffectEditorView();
+        void setScene( QGraphicsScene * scene );
+
+    private slots:
+        void    boxMagnified( const QString& name );
 };
 
 #endif // EFFECTBOXVIEW_H

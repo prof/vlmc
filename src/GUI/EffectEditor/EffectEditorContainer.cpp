@@ -69,6 +69,12 @@ QRectF  EffectEditorContainer::boundingRect() const
     return QRectF(0, 0, EFFECT_CONTAINER_WIDTH + m_margin * 2, EFFECT_CONTAINER_HEIGHT + m_margin * 2 );
 }
 
+void    EffectEditorContainer::mouseDoubleClickEvent( QGraphicsSceneMouseEvent* event )
+{
+    qDebug() << "Double Click";
+    emit magnify( m_name );
+}
+
 QMap<int, QGraphicsLineItem*>&  EffectEditorContainer::getLines( SlotType type )
 {
     if ( type == InSlot )

@@ -30,18 +30,22 @@
 
 class EffectEditorScene : public QGraphicsScene
 {
-public:
-    EffectEditorScene( QWidget* parent = NULL );
+    Q_OBJECT
+    public:
+        EffectEditorScene( QWidget* parent = NULL );
 
-    void    addEffect(QString title);
-    void    mousePressEvent( QGraphicsSceneMouseEvent* event );
-    void    mouseReleaseEvent( QGraphicsSceneMouseEvent* event );
-    void    mouseMoveEvent( QGraphicsSceneMouseEvent* event );
-private:
-    QPointF m_currentInSlot;
-    QPointF m_currentOutSlot;
-    QGraphicsLineItem* m_currentLine;
-    EffectEditorContainer* m_box;
+        void    addEffect(QString title);
+        void    mousePressEvent( QGraphicsSceneMouseEvent* event );
+        void    mouseReleaseEvent( QGraphicsSceneMouseEvent* event );
+        void    mouseMoveEvent( QGraphicsSceneMouseEvent* event );
+    private:
+        QPointF m_currentInSlot;
+        QPointF m_currentOutSlot;
+        QGraphicsLineItem* m_currentLine;
+        EffectEditorContainer* m_box;
+
+    signals:
+        void    magnifyContainer( const QString& name );
 };
 
 #endif // EFFECTBOXSCENE_H

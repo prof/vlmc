@@ -20,11 +20,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-
 #include "EffectEditorView.h"
+//DEBUG
+#include <QtDebug>
+//!DEBUG
 
 EffectEditorView::EffectEditorView()
 {
     setInteractive( true );
     setRenderHint( QPainter::Antialiasing );
+}
+
+void    EffectEditorView::setScene( QGraphicsScene* scene )
+{
+    connect( scene,
+             SIGNAL( magnifyContainer( const QString& ) ),
+             SLOT( boxMagnified( const QString& ) ) );
+    QGraphicsView::setScene( scene );
+}
+
+void    EffectEditorView::boxMagnified( const QString& name )
+{
+    qDebug() << "Box" << name << "need to be magnified";
 }
