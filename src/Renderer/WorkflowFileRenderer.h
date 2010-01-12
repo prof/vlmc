@@ -28,6 +28,8 @@
 #include "WorkflowRenderer.h"
 #include "WorkflowFileRendererDialog.h"
 
+#include <QTimer>
+
 class   WorkflowFileRenderer : public WorkflowRenderer
 {
     Q_OBJECT
@@ -41,14 +43,24 @@ public:
     static void         unlock( void* datas );
 
     void                run();
+    virtual float       getFps() const;
 private:
     const QString               m_outputFileName;
     WorkflowFileRendererDialog* m_dialog;
+    QImage*                     m_image;
+    QTimer                      m_timer;
+
+protected:
+    virtual void*       getLockCallback();
+    virtual void*       getUnlockCallback();
 
 private slots:
     void                        stop();
-    void                        positionChanged( float newPos );
     void                        cancelButtonClicked();
+    void                        __frameChanged( qint64 frame, MainWorkflow::FrameChangedReason reason );
+
+signals:
+    void                        imageUpdated( const uchar* image );
 };
 
 #endif // WORKFLOWFILERENDERER_H

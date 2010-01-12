@@ -39,14 +39,18 @@ public:
     explicit ClipRenderer();
     virtual ~ClipRenderer();
 
-    virtual void            setPosition( float newPos );
     virtual void            togglePlayPause( bool forcePause );
     virtual void            stop();
     virtual void            nextFrame();
     virtual void            previousFrame();
+    virtual qint64          getLengthMs() const;
+    virtual qint64          getCurrentFrame() const;
+    virtual float           getFps() const;
+    virtual Media*          getMedia() const;
 
 private:
     void                    startPreview();
+    void                    setSnapshotVisibility( bool val );
 
 private:
     bool                    m_clipLoaded;
@@ -64,10 +68,10 @@ public slots:
     virtual void            setClip( Clip* clip );
     virtual void            setMedia( Media* media );
     virtual void            mediaUnloaded( const QUuid& );
+    virtual void            previewWidgetCursorChanged( qint64 newFrame );
 
-    void                    __positionChanged();
-    void                    __videoPaused();
-    void                    __videoPlaying();
+//    void                    __positionChanged();
+    void                    __timeChanged( qint64 time );
     void                    __endReached();
     void                    __videoStopped();
 };

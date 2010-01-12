@@ -26,15 +26,19 @@
  *  and start it.
  */
 
-#include <QApplication>
 #include "MainWindow.h"
+
+#include <QApplication>
+#include <QColor>
+#include <QPalette>
+#include <QSettings>
 
 #ifndef VLMC_VERSION
 #define VLMC_VERSION Unknown
 #endif
 
-#define EXPAND(x) #x
-#define STRINGIFY(x) EXPAND(x)
+#define EXPAND( x ) #x
+#define STRINGIFY( x ) EXPAND( x )
 
 /**
  *  VLMC Entry point
@@ -43,15 +47,16 @@
  *  \param argv
  *  \return Return value of vlmc
  */
-int main( int argc, char **argv )
+int
+main( int argc, char **argv )
 {
     QApplication app( argc, argv );
     app.setApplicationName( "vlmc" );
     app.setOrganizationName( "vlmc" );
     app.setOrganizationDomain( "vlmc.org" );
     app.setApplicationVersion( STRINGIFY(VLMC_VERSION) );
-    QSettings::setDefaultFormat( QSettings::IniFormat );
-    Preferences::changeLang( QSettings().value( "Lang" ).toString() );
+    //QSettings::setDefaultFormat( QSettings::IniFormat );
+    //Preferences::changeLang( QSettings().value( "Lang" ).toString() );
 
 #ifdef Q_OS_WIN
     // Ugly workaround
@@ -84,6 +89,8 @@ int main( int argc, char **argv )
     app.setPalette( p );
 
     MainWindow w;
+    QSettings   s;
+    s.setValue( "VlmcVersion", STRINGIFY( VLMC_VERSION ) );
     w.show();
     return app.exec();
 }

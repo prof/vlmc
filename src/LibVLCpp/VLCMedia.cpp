@@ -27,7 +27,7 @@
 using namespace LibVLCpp;
 
 Media::Media( const QString& filename )
-    : m_pixelBuffer( NULL )
+    : m_pixelBuffer( NULL ), m_fileName( filename )
 {
     m_internalPtr = libvlc_media_new( *(LibVLCpp::Instance::getInstance()), filename.toLocal8Bit(), m_ex );
     CheckVlcppException(m_ex);
@@ -40,29 +40,51 @@ Media::~Media()
 
 void                    Media::addOption( const char* opt )
 {
-    libvlc_media_add_option_flag( m_internalPtr, opt, libvlc_media_option_trusted);
+    libvlc_media_add_option_flag( m_internalPtr, opt, libvlc_media_option_trusted );
     CheckVlcppException(m_ex);
 }
 
-void                    Media::setLockCallback( Media::lockCallback callback )
+void                    Media::setVideoLockCallback( void* callback )
 {
     char    param[64];
     sprintf( param, ":sout-smem-video-prerender-callback=%lld", (qint64)(intptr_t)callback );
     addOption(param);
 }
 
-void                    Media::setUnlockCallback( Media::unlockCallback callback )
+void                    Media::setVideoUnlockCallback( void* callback )
 {
     char    param[64];
     sprintf( param, ":sout-smem-video-postrender-callback=%lld", (qint64)(intptr_t)callback );
     addOption( param );
 }
 
-void                    Media::setDataCtx( void* dataCtx )
+void                    Media::setAudioLockCallback( void* callback )
+{
+    char    param[64];
+    sprintf( param, ":sout-smem-audio-prerender-callback=%lld", (qint64)(intptr_t)callback );
+    addOption(param);
+}
+
+void                    Media::setAudioUnlockCallback( void* callback )
+{
+    char    param[64];
+    sprintf( param, ":sout-smem-audio-postrender-callback=%lld", (qint64)(intptr_t)callback );
+    addOption( param );
+}
+
+void                    Media::setVideoDataCtx( void* dataCtx )
 {
     char    param[64];
 
     sprintf( param, ":sout-smem-video-data=%lld", (qint64)(intptr_t)dataCtx );
+    addOption( param );
+}
+
+void                    Media::setAudioDataCtx( void* dataCtx )
+{
+    char    param[64];
+
+    sprintf( param, ":sout-smem-audio-data=%lld", (qint64)(intptr_t)dataCtx );
     addOption( param );
 }
 
@@ -84,4 +106,9 @@ void                    Media::setPixelBuffer( uchar* buffer )
 uchar*                  Media::getPixelBuffer()
 {
     return m_pixelBuffer;
+}
+
+const QString&          Media::getFileName() const
+{
+    return m_fileName;
 }

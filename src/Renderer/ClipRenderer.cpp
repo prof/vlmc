@@ -22,8 +22,10 @@
  *****************************************************************************/
 
 #include <QtDebug>
+#include <QtGlobal>
 
 #include "ClipRenderer.h"
+#include "MainWorkflow.h"
 
 ClipRenderer::ClipRenderer() :
     GenericRenderer(),
@@ -35,9 +37,9 @@ ClipRenderer::ClipRenderer() :
     m_mediaChanged( false )
 {
     connect( m_mediaPlayer,     SIGNAL( stopped() ),            this,   SLOT( __videoStopped() ) );
-    connect( m_mediaPlayer,     SIGNAL( paused() ),             this,   SLOT( __videoPaused() ) );
-    connect( m_mediaPlayer,     SIGNAL( playing() ),            this,   SLOT( __videoPlaying() ) );
-    connect( m_mediaPlayer,     SIGNAL( positionChanged() ),    this,   SLOT( __positionChanged() ) );
+    connect( m_mediaPlayer,     SIGNAL( paused() ),             this,   SIGNAL( paused() ) );
+    connect( m_mediaPlayer,     SIGNAL( playing() ),            this,   SIGNAL( playing() ) );
+    connect( m_mediaPlayer,     SIGNAL( timeChanged( qint64 ) ),        this,   SLOT( __timeChanged( qint64 ) ) );
     connect( m_mediaPlayer,     SIGNAL( endReached() ),         this,   SLOT( __endReached() ) );
 }
 
@@ -51,20 +53,32 @@ ClipRenderer::~ClipRenderer()
 void        ClipRenderer::setMedia( Media* media )
 {
     m_selectedMedia = media;
+    if ( media == NULL )
+    {
+        m_previewLabel->clear();
+        return ;
+    }
     m_begin = 0;
     m_end = media->getNbFrames();
     if ( m_isRendering == true )
         m_mediaChanged = true;
     else
     {
-        m_previewLabel->setPixmap( media->getSnapshot().scaled( m_previewLabel->size(),
-                                                                            Qt::KeepAspectRatio ) );
+        //setSnapshotVisibility( true );
+        //m_previewLabel->setPixmap( media->getSnapshot().scaled( m_previewLabel->size(),
+        //                                                                    Qt::KeepAspectRatio ) );
         m_clipLoaded = false;
     }
 }
 
 void        ClipRenderer::setClip( Clip* clip )
 {
+    if ( clip == NULL )
+    {
+        m_selectedMedia = NULL;
+        m_previewLabel->clear();
+        return ;
+    }
     m_selectedMedia = clip->getParent();
     m_begin = clip->getBegin();
     m_end = clip->getEnd();
@@ -72,6 +86,7 @@ void        ClipRenderer::setClip( Clip* clip )
         m_mediaChanged = true;
     else
     {
+        setSnapshotVisibility( true );
         m_previewLabel->setPixmap( clip->getParent()->getSnapshot().scaled( m_previewLabel->size(),
                                                                             Qt::KeepAspectRatio ) );
         m_clipLoaded = false;
@@ -82,7 +97,7 @@ void        ClipRenderer::startPreview()
 {
     if ( m_selectedMedia == NULL )
         return ;
-    m_previewLabel->setVisible( false );
+    setSnapshotVisibility( false );
 
     //If an old media is found, we delete it, and disconnect
     if ( m_vlcMedia != NULL )
@@ -97,16 +112,6 @@ void        ClipRenderer::startPreview()
     m_isRendering = true;
     m_paused = false;
     m_mediaChanged = false;
-}
-
-void        ClipRenderer::setPosition( float newPos )
-{
-    if ( m_clipLoaded == false || m_isRendering == false )
-        return ;
-    float   begin = m_begin / ( m_end - m_begin );
-    float   end = m_end / ( m_end - m_begin );
-    float   pos = newPos * ( end - begin ) + begin;
-    m_mediaPlayer->setPosition( pos );
 }
 
 void        ClipRenderer::stop()
@@ -125,7 +130,7 @@ void        ClipRenderer::togglePlayPause( bool forcePause )
 {
     if ( m_clipLoaded == false )
     {
-        emit positionChanged( 0 );
+        emit frameChanged( 0, MainWorkflow::Renderer );
         startPreview();
         return ;
     }
@@ -169,6 +174,13 @@ void        ClipRenderer::previousFrame()
     }
 }
 
+qint64      ClipRenderer::getLengthMs() const
+{
+    if ( m_selectedMedia )
+        return ( qRound64( (qreal)( m_end - m_begin ) / m_selectedMedia->getFps() * 1000.0 ) );
+    return 0;
+}
+
 //FIXME: this won't work with clips !
 void        ClipRenderer::mediaUnloaded( const QUuid& uuid )
 {
@@ -182,39 +194,79 @@ void        ClipRenderer::mediaUnloaded( const QUuid& uuid )
     }
 }
 
+void        ClipRenderer::setSnapshotVisibility( bool val )
+{
+   m_previewLabel->setVisible( val );
+   m_renderWidget->setVisible( !val );
+}
+
+qint64      ClipRenderer::getCurrentFrame() const
+{
+    if ( m_clipLoaded == false || m_isRendering == false || m_selectedMedia == NULL )
+        return 0;
+    return qRound64( (qreal)m_mediaPlayer->getTime() / 1000 * (qreal)m_selectedMedia->getFps() );
+}
+
+float       ClipRenderer::getFps() const
+{
+    if ( m_selectedMedia != NULL )
+        return m_selectedMedia->getFps();
+    return 0.0f;
+}
+
+Media*      ClipRenderer::getMedia() const
+{
+    return m_selectedMedia;
+}
+
+void        ClipRenderer::previewWidgetCursorChanged( qint64 newFrame )
+{
+    if ( m_isRendering == true )
+    {
+        qint64 nbSeconds = qRound64( (qreal)newFrame / m_selectedMedia->getFps() );
+        m_mediaPlayer->setTime( nbSeconds * 1000 );
+    }
+}
+
 /////////////////////////////////////////////////////////////////////
 /////SLOTS :
 /////////////////////////////////////////////////////////////////////
-void        ClipRenderer::__videoPaused()
-{
-    emit paused();
-}
 
 void        ClipRenderer::__videoStopped()
 {
+    emit frameChanged( 0, MainWorkflow::Renderer );
     emit stopped();
 }
 
-void        ClipRenderer::__videoPlaying()
-{
-    emit playing();
-}
+//void        ClipRenderer::__positionChanged()
+//{
+//    if ( m_clipLoaded == false)
+//        return ;
+//
+//    qDebug() << "begin:" << m_begin << "end:" << m_end;
+//    qDebug() << "position:" << m_mediaPlayer->getPosition();
+//    float   begin = m_begin / ( m_end - m_begin );
+//    float   end = m_end / ( m_end - m_begin );
+//    float pos = ( m_mediaPlayer->getPosition() - begin ) /
+//                ( end - begin );
+//    qDebug() << pos;
+//    emit frameChanged( pos, MainWorkflow::Renderer );
+//}
 
-void        ClipRenderer::__positionChanged()
+void        ClipRenderer::__timeChanged( qint64 time )
 {
-    if ( m_clipLoaded == false)
-        return ;
-    
-    float   begin = m_begin / ( m_end - m_begin );
-    float   end = m_end / ( m_end - m_begin );
-    float pos = ( m_mediaPlayer->getPosition() - begin ) /
-                ( end - begin );
-    emit positionChanged( pos );
+    float   fps = (qreal)m_mediaPlayer->getFps();
+    if ( fps < 0.1f )
+        fps = m_selectedMedia->getFps();
+    qint64 f = qRound64( (qreal)time / 1000.0 * fps );
+    emit frameChanged( f, MainWorkflow::Renderer );
 }
 
 void        ClipRenderer::__endReached()
 {
     m_mediaPlayer->stop();
     m_isRendering = false;
+    if ( m_mediaChanged == true )
+        m_clipLoaded = false;
     emit endReached();
 }

@@ -33,18 +33,17 @@
 
 #include "Media.h"
 
-//TODO: REMOVE THIS
-#ifndef FPS
-#define FPS     30
-#endif
+
+class Media;
 
 class   Clip : public QObject
 {
     Q_OBJECT
 
     public:
+        static const int DefaultFPS;
         Clip( Media* parent );
-        Clip( Media* parent, qint64 begin, qint64 end );
+        Clip( Media* parent, qint64 begin, qint64 end = -1 );
         Clip( Clip* creator, qint64 begin, qint64 end );
         Clip( Clip* clip );
         Clip( const QUuid& uuid, qint64 begin = 0, qint64 end = -1 );
@@ -53,8 +52,9 @@ class   Clip : public QObject
         qint64              getBegin() const;
         qint64              getEnd() const;
 
-        void                setBegin( qint64 begin );
-        void                setEnd( qint64 end );
+        void                setBegin( qint64 begin, bool updateMax = false );
+        void                setEnd( qint64 end, bool updateMax = false );
+        void                setBoundaries( qint64 newBegin, qint64 newEnd, bool updateMax = false );
 
         /**
             \return         Returns the clip length in frame.
@@ -87,13 +87,8 @@ class   Clip : public QObject
         const QString&      getNotes() const;
         void                setNotes( const QString& notes );
 
-        /**
-         *  \brief  Split this clip in two parts.
-         *  \param  newEnd  The new end for this Clip. This will be the beginning of the
-         *                  newly created Clip.
-         *  \returns A new Clip starting at newEnd.
-         */
-        Clip*               split( qint64 newEndFrame );
+        qint64              getMaxBegin() const;
+        qint64              getMaxEnd() const;
 
     private:
         void        computeLength();
@@ -126,6 +121,18 @@ class   Clip : public QObject
         QUuid       m_Uuid;
         QStringList m_metaTags;
         QString     m_notes;
+
+        /**
+         *  This is used for the resize. The clip won't be abble to be resized beyond this value.
+         *  ie this clip won't start before m_maxBegin.
+         */
+        qint64      m_maxBegin;
+
+        /**
+         *  This is used for the resize. The clip won't be abble to be resized beyond this value
+         *  ie this clip won't end before m_maxEnd.
+         */
+        qint64      m_maxEnd;
 
     signals:
         void        lengthUpdated();

@@ -28,21 +28,23 @@
 
 #include <QtDebug>
 #include "Media.h"
+#include "MetaDataManager.h"
 
 QPixmap*        Media::defaultSnapshot = NULL;
-const QString   Media::VideoExtensions = "*.mov *.avi *.mkv *.mpg *.mpeg *.wmv *.mp4";
-const QString   Media::ImageExtensions = "*.gif *.png *.jpg";
+const QString   Media::VideoExtensions = "*.mov *.avi *.mkv *.mpg *.mpeg *.wmv *.mp4 *.ogg *.ogv";
+const QString   Media::ImageExtensions = "*.gif *.png *.jpg *.jpeg";
 const QString   Media::AudioExtensions = "*.mp3 *.oga *.flac *.aac *.wav";
 const QString   Media::streamPrefix = "stream://";
 
-Media::Media( const QString& filePath, const QString& uuid )
+Media::Media( const QString& filePath, const QString& uuid /*= QString()*/ )
     : m_vlcMedia( NULL ),
     m_snapshot( NULL ),
     m_fileInfo( NULL ),
-    m_length( 0 ),
+    m_lengthMS( 0 ),
     m_nbFrames( 0 ),
     m_width( 0 ),
-    m_height( 0 )
+    m_height( 0 ),
+    m_metadataState( None )
 {
     if ( uuid.length() == 0 )
         m_uuid = QUuid::createUuid();
@@ -69,6 +71,8 @@ Media::Media( const QString& filePath, const QString& uuid )
         m_fileName = m_mrl;
         qDebug() << "Loading a stream";
     }
+
+    m_audioValueList = new QList<int>();
     m_vlcMedia = new LibVLCpp::Media( m_mrl );
 }
 
@@ -84,7 +88,7 @@ Media::~Media()
 
 void        Media::setFileType()
 {
-    QString filter = "*." + m_fileInfo->suffix();
+    QString filter = "*." + m_fileInfo->suffix().toLower();
     if ( Media::VideoExtensions.contains( filter ) )
         m_fileType = Media::Video;
     else if ( Media::AudioExtensions.contains( filter ) )
@@ -144,12 +148,12 @@ const QFileInfo*    Media::getFileInfo() const
 
 void                Media::setLength( qint64 length )
 {
-    m_length = length;
+    m_lengthMS = length;
 }
 
-qint64              Media::getLength() const
+qint64              Media::getLengthMS() const
 {
-    return m_length;
+    return m_lengthMS;
 }
 
 int                 Media::getWidth() const
@@ -187,41 +191,24 @@ Media::FileType     Media::getFileType() const
     return m_fileType;
 }
 
-void                Media::initAudioData( void* datas, unsigned int* freq, unsigned int* nbChannels, unsigned int* fourCCFormat, unsigned int* frameSize )
+void            Media::emitMetaDataComputed( bool hasMetadata )
 {
-    m_audioData.freq = freq;
-    m_audioData.nbChannels = nbChannels;
-    m_audioData.frameSize = frameSize;
-    m_audioData.fourCCFormat = fourCCFormat;
-    m_audioData.datas = datas;
-}
-
-void                Media::addAudioFrame( void* datas, unsigned char* buffer, size_t buffSize, unsigned int nbSample )
-{
-    Q_UNUSED( datas );
-    m_audioData.nbSample = nbSample;
-    m_audioData.buffSize = buffSize;
-
-    int* frame = new int[ m_audioData.buffSize ];
-    for (unsigned int i = 0, u = 0; u < m_audioData.nbSample; i += 4, u++)
-    {
-        int value = buffer[i];
-        value <<= 8;
-        value += buffer[i + 1];
-        value <<= 8;
-        value += buffer[i + 2];
-        value <<= 8;
-        value += buffer[i + 3];
-        frame[u] = value;
-    }
-    m_audioData.frameList.append( frame );
-//    qDebug() << m_audioData.frameList.size();
-}
-
-void            Media::emitMetaDataComputed()
-{
-    emit metaDataComputed();
+    if ( hasMetadata == true )
+        m_metadataState = ParsedWithoutSnapshot;
     emit metaDataComputed( this );
+}
+
+void            Media::emitSnapshotComputed()
+{
+    if ( m_metadataState == ParsedWithoutSnapshot )
+        m_metadataState = ParsedWithSnapshot;
+    emit snapshotComputed( this );
+}
+
+void            Media::emitAudioSpectrumComuted()
+{
+    m_metadataState = ParsedWithAudioSpectrum;
+    emit audioSpectrumComputed( this );
 }
 
 Media::InputType    Media::getInputType() const
@@ -254,17 +241,17 @@ const QString&      Media::getFileName() const
     return m_fileName;
 }
 
-const QStringList&      Media::getMetaTags() const
+const QStringList&  Media::getMetaTags() const
 {
     return m_metaTags;
 }
 
-void            Media::setMetaTags( const QStringList& tags )
+void                Media::setMetaTags( const QStringList& tags )
 {
     m_metaTags = tags;
 }
 
-bool            Media::matchMetaTag( const QString& tag ) const
+bool                Media::matchMetaTag( const QString& tag ) const
 {
     if ( tag.length() == 0 )
         return true;
@@ -275,4 +262,19 @@ bool            Media::matchMetaTag( const QString& tag ) const
             return true;
     }
     return false;
+}
+
+void            Media::addClip( Clip* clip )
+{
+    m_clips.insert( clip->getUuid(), clip );
+}
+
+void            Media::removeClip( const QUuid& uuid )
+{
+    m_clips.remove( uuid );
+}
+
+Media::MetadataState   Media::getMetadata() const
+{
+    return m_metadataState;
 }

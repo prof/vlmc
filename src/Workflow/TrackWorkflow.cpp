@@ -24,13 +24,18 @@
 
 #include "vlmc.h"
 #include "TrackWorkflow.h"
+#include "VideoClipWorkflow.h"
+#include "ImageClipWorkflow.h"
+#include "AudioClipWorkflow.h"
 
-TrackWorkflow::TrackWorkflow( unsigned int trackId ) :
+TrackWorkflow::TrackWorkflow( unsigned int trackId, MainWorkflow::TrackType type  ) :
         m_trackId( trackId ),
         m_length( 0 ),
         m_forceRepositionning( false ),
         m_paused( false ),
-        m_synchroneRenderBuffer( NULL )
+        m_synchroneRenderBuffer( NULL ),
+        m_trackType( type ),
+        m_lastFrame( 0 )
 {
     m_forceRepositionningMutex = new QMutex;
     m_clipsLock = new QReadWriteLock;
@@ -53,7 +58,18 @@ TrackWorkflow::~TrackWorkflow()
 
 void    TrackWorkflow::addClip( Clip* clip, qint64 start )
 {
-    ClipWorkflow* cw = new ClipWorkflow( clip );
+    if ( m_trackType == MainWorkflow::AudioTrack )
+        start = 0;
+    ClipWorkflow* cw;
+    if ( m_trackType == MainWorkflow::VideoTrack )
+    {
+        if ( clip->getParent()->getFileType() == Media::Video )
+            cw = new VideoClipWorkflow( clip );
+        else
+            cw = new ImageClipWorkflow( clip );
+    }
+    else
+        cw = new AudioClipWorkflow( clip );
     addClip( cw, start );
 }
 
@@ -117,13 +133,16 @@ void        TrackWorkflow::renderClip( ClipWorkflow* cw, qint64 currentFrame,
 {
     cw->getStateLock()->lockForRead();
 
-//    qDebug() << "Rendering clip" << cw << "state:" << cw->getState();
+//    qDebug() << "Rendering clip" << cw << "state:" << cw->getState() << "Type:" << m_trackType;
     if ( cw->getState() == ClipWorkflow::Rendering )
     {
         //The rendering state meens... whell it means that the frame is
         //beeing rendered, so we wait.
         cw->getStateLock()->unlock();
-        cw->waitForCompleteRender();
+        {
+            QMutexLocker    lock( cw->getRenderCondWait()->getMutex() );
+            cw->waitForCompleteRender();
+        }
         //This way we can trigger the appropriate if just below.
         //by restoring the initial state of the function, and just pretend that
         //nothing happened.
@@ -201,6 +220,7 @@ void                TrackWorkflow::preloadClip( ClipWorkflow* cw )
 
 void                TrackWorkflow::stopClipWorkflow( ClipWorkflow* cw )
 {
+//    qDebug() << "Stopping clip workflow";
     cw->getStateLock()->lockForRead();
 
     if ( cw->getState() == ClipWorkflow::Stopped )
@@ -223,7 +243,10 @@ void                TrackWorkflow::stopClipWorkflow( ClipWorkflow* cw )
     else if ( cw->getState() == ClipWorkflow::Rendering )
     {
         cw->getStateLock()->unlock();
-        cw->waitForCompleteRender();
+        {
+            QMutexLocker    lock( cw->getRenderCondWait()->getMutex() );
+            cw->waitForCompleteRender();
+        }
         {
             QMutexLocker    lock( cw->getSleepMutex() );
             cw->queryStateChange( ClipWorkflow::Stopping );
@@ -271,6 +294,7 @@ void                    TrackWorkflow::stop()
         stopClipWorkflow( it.value() );
         ++it;
     }
+    m_lastFrame = 0;
 }
 
 bool                TrackWorkflow::getOutput( qint64 currentFrame )
@@ -279,7 +303,6 @@ bool                TrackWorkflow::getOutput( qint64 currentFrame )
 
     QMap<qint64, ClipWorkflow*>::iterator       it = m_clips.begin();
     QMap<qint64, ClipWorkflow*>::iterator       end = m_clips.end();
-    static  qint64                              lastFrame = 0;
     bool                                        needRepositioning;
     bool                                        hasRendered = false;
 
@@ -295,10 +318,10 @@ bool                TrackWorkflow::getOutput( qint64 currentFrame )
             needRepositioning = true;
             m_forceRepositionning = false;
         }
-        else if ( m_paused == true && currentFrame != lastFrame )
+        else if ( m_paused == true && currentFrame != m_lastFrame )
             needRepositioning = true;
         else
-            needRepositioning = ( abs( currentFrame - lastFrame ) > 1 ) ? true : false;
+            needRepositioning = ( abs( currentFrame - m_lastFrame ) > 1 ) ? true : false;
     }
     m_nbClipToRender = 0;
 
@@ -332,7 +355,7 @@ bool                TrackWorkflow::getOutput( qint64 currentFrame )
     {
         clipWorkflowRenderCompleted( NULL );
     }
-    lastFrame = currentFrame;
+    m_lastFrame = currentFrame;
     return hasRendered;
 }
 
@@ -414,9 +437,12 @@ Clip*       TrackWorkflow::removeClip( const QUuid& id )
             ClipWorkflow*   cw = it.value();
             Clip*           clip = cw->getClip();
             m_clips.erase( it );
+            stopClipWorkflow( cw );
             computeLength();
             disconnectClipWorkflow( cw );
             delete cw;
+            if ( m_length == 0 )
+                emit trackEndReached( m_trackId );
             return clip;
         }
         ++it;
@@ -470,7 +496,7 @@ void        TrackWorkflow::clipWorkflowRenderCompleted( ClipWorkflow* cw )
 //        qDebug() << "Track render not completed yet";
 }
 
-LightVideoFrame*     TrackWorkflow::getSynchroneOutput()
+void*       TrackWorkflow::getSynchroneOutput()
 {
     return m_synchroneRenderBuffer;
 }
@@ -564,6 +590,13 @@ void    TrackWorkflow::save( QDomDocument& doc, QDomElement& trackNode ) const
             end.appendChild( text );
             clipNode.appendChild( end );
         }
+        {
+            QDomElement     trackType = doc.createElement( "trackType" );
+
+            QDomCharacterData   text = doc.createTextNode( QString::number( m_trackType ) );
+            trackType.appendChild( text );
+            clipNode.appendChild( trackType );
+        }
         trackNode.appendChild( clipNode );
     }
 }
@@ -576,8 +609,8 @@ void    TrackWorkflow::clear()
 
     for ( ; it != end; ++it )
     {
+        //The clip contained in the trackworkflow will be delete by the undo stack.
         ClipWorkflow*   cw = it.value();
-        delete cw->getClip();
         delete cw;
     }
     m_clips.clear();
@@ -615,4 +648,9 @@ void    TrackWorkflow::forceRepositionning()
 {
     QMutexLocker    lock( m_forceRepositionningMutex );
     m_forceRepositionning = true;
+}
+
+void    TrackWorkflow::simulateBlackOutputRender()
+{
+    clipWorkflowRenderCompleted( NULL );
 }

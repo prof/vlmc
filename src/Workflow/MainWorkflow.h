@@ -28,49 +28,62 @@
 #include <QReadWriteLock>
 #include <QMutex>
 #include <QDomElement>
+#include <QWaitCondition>
 
-#include "Toggleable.hpp"
-#include "TrackWorkflow.h"
+#include "WaitCondition.hpp"
 #include "Singleton.hpp"
+#include "Clip.h"
 #include "LightVideoFrame.h"
 #include "EffectsEngine.h"
+
+class   TrackWorkflow;
+class   TrackHandler;
 
 class   MainWorkflow : public QObject, public Singleton<MainWorkflow>
 {
     Q_OBJECT
 
     public:
-        MainWorkflow( int trackCount );
-        ~MainWorkflow();
+        struct      OutputBuffers
+        {
+            const LightVideoFrame*      video;
+            unsigned char*              audio;
+        };
+        enum    TrackType
+        {
+            VideoTrack,
+            NbTrackType,
+            AudioTrack,
+        };
+        enum    FrameChangedReason
+        {
+            Renderer,
+            TimelineCursor,
+            PreviewCursor,
+            RulerCursor,
+        };
 
-        EffectsEngine*          getEffectsEngine( void );
-        void                    addClip( Clip* clip, unsigned int trackId, qint64 start );
+        void                    addClip( Clip* clip, unsigned int trackId, qint64 start, TrackType type );
+
         void                    startRender();
         void                    getOutput();
-        const LightVideoFrame*  getSynchroneOutput();
-
-        /**
-         *  \brief              Set the workflow position
-         *  \param              pos: The position in vlc position
-        */
-        void                    setPosition( float pos );
+        OutputBuffers*          getSynchroneOutput();
+        EffectsEngine*          getEffectsEngine();
 
         /**
          *  \brief              Set the workflow position by the desired frame
          *  \param              currentFrame: The desired frame to render from
+         *  \paragraph          reason: The program part which required this frame change
+                                        (to avoid cyclic events)
         */
-        void                    setCurrentFrame( qint64 currentFrame );
+        void                    setCurrentFrame( qint64 currentFrame,
+                                                 MainWorkflow::FrameChangedReason reason );
 
         /**
          *  \return             Returns the global length of the workflow
          *                      in frames.
         */
-        qint64                  getLength() const;
-
-        /**
-         *  Returns the number of tracks in this workflow
-         */
-        unsigned int            getTrackCount() const;
+        qint64                  getLengthFrame() const;
 
         /**
          *  Stop the workflow (including sub track workflows and clip workflows)
@@ -86,12 +99,12 @@ class   MainWorkflow : public QObject, public Singleton<MainWorkflow>
         void                    nextFrame();
         void                    previousFrame();
 
-        static MainWorkflow*    getInstance();
-        static void             deleteInstance();
-        Clip*                   removeClip( const QUuid& uuid, unsigned int trackId );
+        Clip*                   removeClip( const QUuid& uuid, unsigned int trackId, MainWorkflow::TrackType trackType );
+
         void                    moveClip( const QUuid& uuid, unsigned int oldTrack,
-                                          unsigned int newTrack, qint64 pos, bool undoRedoCommand = false );
-        qint64                  getClipPosition( const QUuid& uuid, unsigned int trackId ) const;
+                                          unsigned int newTrack, qint64 pos,
+                                          MainWorkflow::TrackType trackType, bool undoRedoCommand = false );
+        qint64                  getClipPosition( const QUuid& uuid, unsigned int trackId, MainWorkflow::TrackType trackType ) const;
 
         /**
          *  \brief  This method will wake every wait condition, so that threads won't
@@ -99,36 +112,36 @@ class   MainWorkflow : public QObject, public Singleton<MainWorkflow>
          */
         void                    cancelSynchronisation();
 
-        void                    muteTrack( unsigned int trackId );
-        void                    unmuteTrack( unsigned int trackId );
+        void                    muteTrack( unsigned int trackId, MainWorkflow::TrackType );
+        void                    unmuteTrack( unsigned int trackId, MainWorkflow::TrackType );
 
         /**
          * \param   uuid : The clip's uuid.
          *              Please note that the UUID must be the "timeline uuid"
          *              and note the clip's uuid, or else nothing would match.
          *  \param  trackId : the track id
+         *  \param  trackType : the track type (audio or video)
          *  \returns    The clip that matches the given UUID.
          */
-        Clip*                   getClip( const QUuid& uuid, unsigned int trackId );
-
-        void                    clear();
+        Clip*                   getClip( const QUuid& uuid, unsigned int trackId, MainWorkflow::TrackType trackType );
 
         void                    setFullSpeedRender( bool value );
+        int                     getTrackCount( MainWorkflow::TrackType trackType ) const;
+
+        qint64                  getCurrentFrame() const;
 
     private:
-        static MainWorkflow*    m_instance;
-        static LightVideoFrame* nullOutput;
-        static LightVideoFrame* blackOutput;
-
-    private:
+        MainWorkflow( int trackCount = 64 );
+        ~MainWorkflow();
         void                    computeLength();
         void                    activateTrack( unsigned int trackId );
 
+        static LightVideoFrame* blackOutput;
+
     private:
-        Toggleable<TrackWorkflow*>*     m_tracks;
+        QReadWriteLock*                 m_currentFrameLock;
         qint64                          m_currentFrame;
-        qint64                          m_length;
-        unsigned int                    m_trackCount;
+        qint64                          m_lengthFrame;
         /**
          *  This boolean describe is a render has been started
         */
@@ -136,45 +149,42 @@ class   MainWorkflow : public QObject, public Singleton<MainWorkflow>
         QReadWriteLock*                 m_renderStartedLock;
 
         QMutex*                         m_renderMutex;
-        QAtomicInt                      m_nbTracksToPause;
-        QAtomicInt                      m_nbTracksToUnpause;
-        const LightVideoFrame*          m_synchroneRenderingBuffer;
-        unsigned int                    m_nbTracksToRender;
-        QMutex*                         m_nbTracksToRenderMutex;
-        QMutex*                         m_highestTrackNumberMutex;
-        unsigned int                    m_highestTrackNumber;
         QWaitCondition*                 m_synchroneRenderWaitCondition;
         QMutex*                         m_synchroneRenderWaitConditionMutex;
+        WaitCondition*                  m_pauseWaitCond;
+
         bool                            m_paused;
+        TrackHandler**                  m_tracks;
+        OutputBuffers*                  m_outputBuffers;
 
         EffectsEngine*                  m_effectEngine;
 
+        friend class    Singleton<MainWorkflow>;
+
     private slots:
-        void                            trackEndReached( unsigned int trackId );
-        void                            trackPaused();
-        void                            trackUnpaused();
-        void                            tracksRenderCompleted( unsigned int trackId );
+        void                            tracksPaused();
+        void                            tracksUnpaused();
+        void                            tracksRenderCompleted();
+        void                            tracksEndReached();
 
     public slots:
         void                            loadProject( const QDomElement& project );
         void                            saveProject( QDomDocument& doc, QDomElement& rootNode );
+        void                            clear();
 
     signals:
         /**
-         *  \brief Used to notify a change to the timeline cursor
+         *  \brief Used to notify a change to the timeline and preview widget cursor
          */
-        void                    frameChanged( qint64 currentFrame );
-        /**
-          * \brief Used to nofify a change to the PreviewWidget
-          */
-        void                    positionChanged( float pos );
+        void                    frameChanged( qint64,
+                                              MainWorkflow::FrameChangedReason );
 
         void                    mainWorkflowEndReached();
         void                    mainWorkflowPaused();
         void                    mainWorkflowUnpaused();
-        void                    clipAdded( Clip*, unsigned int, qint64 );
-        void                    clipRemoved( QUuid, unsigned int );
-        void                    clipMoved( QUuid, unsigned int, qint64 );
+        void                    clipAdded( Clip*, unsigned int, qint64, MainWorkflow::TrackType );
+        void                    clipRemoved( Clip*, unsigned int, MainWorkflow::TrackType );
+        void                    clipMoved( QUuid, unsigned int, qint64, MainWorkflow::TrackType );
         void                    cleared();
 };
 

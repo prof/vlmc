@@ -59,22 +59,25 @@ namespace   LibVLCpp
         int                                 getHeight();
         float                               getFps();
         void                                nextFrame();
+        bool                                hasVout();
+        const QString&                      getLoadedFileName() const;
+        QString                             getLoadedMRL();
 
     private:
         static void                         callbacks( const libvlc_event_t* event, void* self );
-        void                                timeChangedFilter();
 
         Exception                           m_ex;
         libvlc_event_manager_t*             p_em;
+        Media*                              m_media;
 
     signals:
         void                                snapshotTaken();
-        void                                timeChanged();
+        void                                timeChanged( qint64 );
         void                                playing();
         void                                paused();
         void                                stopped();
         void                                endReached();
-        void                                positionChanged();
+        void                                positionChanged( float );
         void                                lengthChanged();
     };
 }

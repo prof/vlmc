@@ -26,53 +26,65 @@
 
 #include <QList>
 #include <QTemporaryFile>
-#include <QThread>
-#include <QWidget>
+#include <QLabel>
 #include "Media.h"
 #include "VLCMediaPlayer.h"
 
-class MetaDataWorker : public QThread
+class MetaDataWorker : public QObject
 {
     Q_OBJECT
     Q_DISABLE_COPY( MetaDataWorker )
 
     public:
-        MetaDataWorker( Media* media );
+        enum MetaDataType
+        {
+            MetaData,
+            Snapshot,
+            Audio
+        };
+
+    public:
+        MetaDataWorker( LibVLCpp::MediaPlayer* mediaPlayer, Media* media, MetaDataType type );
         ~MetaDataWorker();
-        virtual void                run();
+        void                        compute();
 
     private:
         void                        computeVideoMetaData();
         void                        computeImageMetaData();
-
-        //AMEM part :
-        static  void                openSoundBuffer( void* datas, unsigned int* freq,
-                                                        unsigned int* nbChannels, unsigned int* fourCCFormat,
-                                                        unsigned int* frameSize );
-        static  void                playSoundBuffer( void* datas, unsigned char* buffer,
-                                                     size_t buffSize, unsigned int nbSample );
-        static  void                closeSoundBuffer( void* datas );
-        static  void                instanceParameterHandler( void*, char*, char* );
+        void                        computeAudioMetaData();
+        void                        addAudioValue( int value );
 
     private:
         void                        getMetaData();
+        void                        initVlcOutput();
+        static void                 lock( MetaDataWorker* metaDataWorker, uint8_t** pcm_buffer , unsigned int size );
+        static void                 unlock( MetaDataWorker* metaDataWorker, uint8_t* pcm_buffer,
+                                        unsigned int channels, unsigned int rate,
+                                        unsigned int nb_samples, unsigned int bits_per_sample,
+                                        unsigned int size, int pts );
 
     private:
         LibVLCpp::MediaPlayer*      m_mediaPlayer;
+        MetaDataType                m_type;
 
-        Media*                      m_currentMedia;
+        Media*                      m_media;
         QString                     m_tmpSnapshotFilename;
 
         bool                        m_mediaIsPlaying;
         bool                        m_lengthHasChanged;
 
+        unsigned char*              m_audioBuffer;
+
+    signals:
+        void    snapshotRequested();
+        void    mediaPlayerIdle( LibVLCpp::MediaPlayer* mediaPlayer );
+
     private slots:
         void    renderSnapshot();
         void    setSnapshot();
-        void    startAudioDataParsing();
-        void    stopAudioDataParsing();
         void    entrypointPlaying();
         void    entrypointLengthChanged();
+        void    generateAudioSpectrum();
 };
 
 #endif // METADATAWORKER_H

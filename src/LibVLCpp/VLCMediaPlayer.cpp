@@ -27,7 +27,7 @@
 
 using namespace LibVLCpp;
 
-MediaPlayer::MediaPlayer()
+MediaPlayer::MediaPlayer() : m_media( NULL )
 {
     m_internalPtr = libvlc_media_player_new( LibVLCpp::Instance::getInstance()->getInternalPtr(), m_ex );
     CheckVlcppException( m_ex );
@@ -46,7 +46,7 @@ MediaPlayer::MediaPlayer()
     libvlc_event_attach( p_em, libvlc_MediaPlayerLengthChanged, callbacks,this,m_ex );
 }
 
-MediaPlayer::MediaPlayer( Media* media )
+MediaPlayer::MediaPlayer( Media* media ) : m_media( media )
 {
     m_internalPtr = libvlc_media_player_new_from_media( media->getInternalPtr(), m_ex );
     CheckVlcppException( m_ex );
@@ -100,10 +100,10 @@ void                            MediaPlayer::callbacks( const libvlc_event_t* ev
         self->emit endReached();
         break;
     case libvlc_MediaPlayerTimeChanged:
-        self->emit timeChanged();
+        self->emit timeChanged( event->u.media_player_time_changed.new_time / 1000 );
         break;
     case libvlc_MediaPlayerPositionChanged:
-        self->emit positionChanged();
+        self->emit positionChanged( event->u.media_player_position_changed.new_position );
         break;
     case libvlc_MediaPlayerLengthChanged:
         self->emit lengthChanged();
@@ -209,17 +209,6 @@ void                                MediaPlayer::setDrawable( uint32_t drawable 
     CheckVlcppException( m_ex );
 }
 
-void                                MediaPlayer::timeChangedFilter()
-{
-    // Don't flood the gui with too many signals
-    qint64 currentTime = getTime() / 100;
-    static qint64 lastTime = 0;
-
-    if ( currentTime != lastTime )
-        emit timeChanged();
-    lastTime = currentTime;
-}
-
 void                                MediaPlayer::setMedia( Media* media )
 {
     libvlc_media_player_set_media( m_internalPtr, media->getInternalPtr(), m_ex);
@@ -251,4 +240,24 @@ void                                MediaPlayer::nextFrame()
 {
     libvlc_media_player_next_frame( m_internalPtr, m_ex );
     CheckVlcppException( m_ex );
+}
+
+bool                                MediaPlayer::hasVout()
+{
+    bool    res = libvlc_media_player_has_vout( m_internalPtr, m_ex );
+    CheckVlcppException( m_ex );
+    return res;
+}
+
+const QString&                      MediaPlayer::getLoadedFileName() const
+{
+    return m_media->getFileName();
+}
+
+QString                             MediaPlayer::getLoadedMRL()
+{
+    Media::internalPtr     media = libvlc_media_player_get_media( m_internalPtr, m_ex );
+    CheckVlcppException( m_ex );
+    char* str = libvlc_media_get_mrl( media );
+    return QString( str );
 }

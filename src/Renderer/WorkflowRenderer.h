@@ -30,6 +30,8 @@
 
 #include "Workflow/MainWorkflow.h"
 #include "GenericRenderer.h"
+#include "StackedAction.hpp"
+#include "ActionStack.h"
 
 class   WorkflowRenderer : public GenericRenderer
 {
@@ -37,47 +39,62 @@ class   WorkflowRenderer : public GenericRenderer
     Q_DISABLE_COPY( WorkflowRenderer )
 
     public:
-        enum    Actions
-        {
-            Pause,
-            //Unpause,
-        };
         WorkflowRenderer();
         ~WorkflowRenderer();
 
-        /**
-            \brief          Set the preview position
-            \param          newPos : The new position in vlc position (between
-                                        0 and 1)
-        */
-        virtual void        setPosition( float newPos );
+        void                initializeRenderer();
         virtual void        togglePlayPause( bool forcePause );
         virtual void        stop();
         virtual void        nextFrame();
         virtual void        previousFrame();
+        virtual qint64      getLengthMs() const;
+        virtual qint64      getCurrentFrame() const;
+        virtual float       getFps() const;
+        void                addClip( Clip* clip, uint32_t trackId, qint64 startingPos, MainWorkflow::TrackType trackType );
+        void                removeClip( const QUuid& uuid, uint32_t trackId, MainWorkflow::TrackType trackType );
+        /**
+         *  \brief                  Will split a clip and return the created clip, resulting of the split operation.
+         *  \param  toSplit         The clip to split
+         *  \param  newClip         If the "toSplit" clip already has been splitted, this is the clip resulting
+         *                          from the previous split operation. This prevent creating and deleting clip that could be used elsewhere.
+         *  \param  trackId         The track containing the clip
+         *  \param  newClipPos      The position of the "newClip" on the timeline.
+         *  \param  newClipBegin    The starting frame (from the beginning of the clip's parent media)
+         *  \param  trackType       The track type (audio or video)
+         *  \return                 The newly created clip if "newClip" was NULL; else, newClip is returned.
+         */
+        Clip*               split( Clip* toSplit, Clip* newClip, uint32_t trackId, qint64 newClipPos, qint64 newClipBegin, MainWorkflow::TrackType trackType );
+        void                unsplit( Clip* origin, Clip* splitted, uint32_t trackId, MainWorkflow::TrackType trackType );
+        /**
+         *  \param  undoRedoAction: if true, the potential move resulting from the resize will be emmited to the GUI.
+         *                          if this is not an undo redo action, the GUI is already aware of the move.
+         */
+        void                resizeClip( Clip* clip, qint64 newBegin, qint64 newEnd, qint64 newPos,
+                                        uint32_t trackId, MainWorkflow::TrackType trackType, bool undoRedoAction = false );
 
         static void*        lock( void* datas );
+        static void*        lockAudio( void* datas );
         static void         unlock( void* datas );
-
     private:
         void                internalPlayPause( bool forcePause );
-        void                pauseMainWorkflow();
-        void                unpauseMainWorkflow();
         virtual void        startPreview();
         void                checkActions();
+
+    protected:
+        virtual void*       getLockCallback();
+        virtual void*       getUnlockCallback();
 
     protected:
         MainWorkflow*       m_mainWorkflow;
         LibVLCpp::Media*    m_media;
         bool                m_stopping;
+        float               m_outputFps;
 
     private:
-        unsigned char*	    m_renderFrame;
-        QStack<Actions>     m_actions;
-        QReadWriteLock*     m_actionsLock;
-        bool                m_pauseAsked;
-        bool                m_unpauseAsked;
-        QMutex*             m_condMutex;
+        unsigned char*	    m_renderVideoFrame;
+        unsigned char*	    m_renderAudioSample;
+        Action::Stack       m_actions;
+        QMutex*             m_actionsMutex;
         QWaitCondition*     m_waitCond;
 
     public slots:
@@ -85,12 +102,9 @@ class   WorkflowRenderer : public GenericRenderer
         virtual void        setMedia( Media* ) {}
         void                mediaUnloaded( const QUuid& ) {}
         void                timelineCursorChanged( qint64 newFrame );
+        void                rulerCursorChanged( qint64 newFrame );
+        void                previewWidgetCursorChanged( qint64 newFrame );
 
-        void                __positionChanged();
-        void                __positionChanged( float pos );
-        void                __videoPaused();
-        void                __videoStopped();
-        void                __videoPlaying();
         void                __endReached();
 
     private slots:

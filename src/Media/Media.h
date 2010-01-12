@@ -35,21 +35,12 @@
 #include <QUuid>
 #include <QObject>
 #include <QFileInfo>
+#include <QHash>
 
 #include "VLCMedia.h"
+#include "Clip.h"
 
-struct          audioData
-{
-    void*               datas;
-    unsigned int*       freq;
-    unsigned int*       nbChannels;
-    unsigned int*       fourCCFormat;
-    unsigned int*       frameSize;
-    unsigned int        nbSample;
-    unsigned char*      buffer;
-    size_t              buffSize;
-    QVector<int*>       frameList;
-};
+class Clip;
 
 /**
   * Represents a basic container for media informations.
@@ -74,7 +65,14 @@ public:
         File,
         Stream
     };
-    Media( const QString& filePath, const QString& = QString() );
+    enum    MetadataState
+    {
+        None,
+        ParsedWithoutSnapshot,
+        ParsedWithSnapshot,
+        ParsedWithAudioSpectrum
+    };
+    Media( const QString& filePath, const QString& uuid = QString() );
     virtual ~Media();
 
     /**
@@ -99,7 +97,7 @@ public:
         \return                 Returns the length of this media (ie the
                                 video duration) in milliseconds.
     */
-    qint64                      getLength() const;
+    qint64                      getLengthMS() const;
     /**
         \brief                  This methods is most of an entry point for the
                                 MetadataManager than enything else.
@@ -130,46 +128,53 @@ public:
     InputType                   getInputType() const;
     static const QString        streamPrefix;
 
-    void                        initAudioData( void* datas, unsigned int* freq, unsigned int* nbChannels, unsigned int* fourCCFormat, unsigned int* frameSize );
-    void                        addAudioFrame( void* datas, unsigned char* buffer, size_t buffSize, unsigned int nbSample );
-
-    audioData*                  getAudioData() { return &m_audioData; }
-    QVector<int*>               getAudioFrameList() { return m_audioData.frameList; }
-    unsigned int                getAudioNbSample() { return m_audioData.nbSample; }
-
     const QStringList&          getMetaTags() const;
     void                        setMetaTags( const QStringList& tags );
     bool                        matchMetaTag( const QString& tag ) const;
 
-    void                        emitMetaDataComputed();
+    void                        emitMetaDataComputed( bool hasMetadata );
+    void                        emitSnapshotComputed();
+    void                        emitAudioSpectrumComuted();
+
+//    bool                        hasMetadata() const;
+    MetadataState               getMetadata() const;
+
+    void                        addClip( Clip* clip );
+    void                        removeClip( const QUuid& uuid );
+    Clip*                       clip( const QUuid& uuid ) const { return m_clips[uuid]; }
+    const QHash<QUuid, Clip*>*  clips() const { return &m_clips; }
+
+    QList<int>*                 getAudioValues() { return m_audioValueList; }
+
 
 private:
     void                        setFileType();
 
 protected:
     static QPixmap*             defaultSnapshot;
-
     LibVLCpp::Media*            m_vlcMedia;
     QString                     m_mrl;
     QList<QString>              m_volatileParameters;
     QPixmap*                    m_snapshot;
     QUuid                       m_uuid;
     QFileInfo*                  m_fileInfo;
-    qint64                      m_length;
+    qint64                      m_lengthMS;
     qint64                      m_nbFrames;
     unsigned int                m_width;
     unsigned int                m_height;
     float                       m_fps;
-    int*                        m_audioSpectrum;
-    audioData                   m_audioData;
     FileType                    m_fileType;
     InputType                   m_inputType;
+    MetadataState               m_metadataState;
     QString                     m_fileName;
     QStringList                 m_metaTags;
+    QHash<QUuid, Clip*>         m_clips;
+    QList<int>*                 m_audioValueList;
 
 signals:
-    void                        metaDataComputed();
     void                        metaDataComputed( Media* );
+    void                        snapshotComputed( Media* );
+    void                        audioSpectrumComputed( Media* );
 };
 
 #endif // CLIP_H__
